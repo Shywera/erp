@@ -35,6 +35,14 @@ instalacija.bat     REM jednom: okruženje + ovisnosti + migracije
 pokreni.bat         REM start na http://localhost:8000
 ```
 
+## Docker (opcionalno)
+
+```bash
+docker compose up -d        # izgradi i pokreni na http://localhost:8000
+```
+Baza u imenovanom volumenu (`erp-data`); za PostgreSQL postavite `DATABASE_URL`.
+Image se automatski validira u CI-ju.
+
 Integracija s naslijeđenim ERP-om ide preko **read-only adaptera** (`ERP_ADAPTER=mock|erp`);
 kredencijali se drže isključivo u `.env`. Repozitorij sadrži demo podatke.
 
