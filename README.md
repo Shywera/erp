@@ -1,5 +1,7 @@
 # ERP / MES / WMS — modularni sustav za tiskarsku proizvodnju
 
+[![CI](https://github.com/Shywera/erp/actions/workflows/ci.yml/badge.svg)](https://github.com/Shywera/erp/actions/workflows/ci.yml)
+
 Modularni poslovno-proizvodni sustav građen za tiskaru samoljepljivih etiketa.
 Svaki modul je samostalna cjelina (modeli + rute + predlošci) registrirana u
 zajedničku FastAPI aplikaciju, s Alembic migracijama i dokumentacijom po modulu.

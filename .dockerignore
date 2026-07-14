@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+*.db
+.env
+Resources/
+Dokumentacija-HR/
+docs/
+tests/
+.git/
+*.txt
+!requirements.txt

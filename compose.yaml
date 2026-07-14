@@ -1,0 +1,13 @@
+services:
+  erp:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:////data/erp.db
+    volumes:
+      - erp-data:/data
+    restart: unless-stopped
+
+volumes:
+  erp-data:
