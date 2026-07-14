@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Strojevi{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-5">
+    <h1 class="text-xl font-bold text-gray-800">Strojevi</h1>
+    <a href="/strojevi/novi"
+       class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded shadow transition-colors">
+        + Novi stroj
+    </a>
+</div>
+
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden">
+    <div class="px-4 py-3 border-b border-gray-300 bg-gray-50">
+        <input type="search"
+               name="q"
+               placeholder="Pretraži po šifri, nazivu, tipu..."
+               autocomplete="off"
+               class="w-full max-w-md border border-gray-400 bg-white rounded px-3 py-1.5 text-sm text-gray-900
+                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+               hx-get="/strojevi/search"
+               hx-trigger="input changed delay:300ms, search"
+               hx-target="#strojevi-tbody"
+               hx-swap="innerHTML">
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-slate-800 text-white text-xs uppercase tracking-wide">
+                    <th class="px-3 py-2.5 text-left font-semibold">Šifra</th>
+                    <th class="px-3 py-2.5 text-left font-semibold">Naziv</th>
+                    <th class="px-3 py-2.5 text-left font-semibold">Tip</th>
+                    <th class="px-3 py-2.5 text-left font-semibold">Max format</th>
+                    <th class="px-3 py-2.5 text-left font-semibold">Brzina</th>
+                    <th class="px-3 py-2.5 text-center font-semibold">Aktivan</th>
+                    <th class="px-3 py-2.5 text-right font-semibold w-16"></th>
+                </tr>
+            </thead>
+            <tbody id="strojevi-tbody">
+                {% for s in strojevi %}
+                {% include "strojevi/_row.html" %}
+                {% else %}
+                <tr>
+                    <td colspan="7" class="px-4 py-8 text-center text-gray-400 text-sm">Nema strojeva.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

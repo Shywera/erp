@@ -1,0 +1,71 @@
+<div id="boje-sekcija">
+
+    {% if boje %}
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-gray-50 text-[11px] uppercase tracking-wide text-gray-500 border-b border-gray-200">
+                    <th class="px-4 py-2 text-center w-12">Prolaz</th>
+                    <th class="px-4 py-2 text-left">Naziv boje</th>
+                    <th class="px-4 py-2 text-left">Pantone / oznaka</th>
+                    <th class="px-4 py-2 text-right">kg / 1000 araka</th>
+                    <th class="px-4 py-2 w-10"></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for b in boje %}
+            <tr class="{% if loop.index0 % 2 == 0 %}bg-white{% else %}bg-gray-50{% endif %} border-b border-gray-100 hover:bg-blue-50 group">
+                <td class="px-4 py-1.5 text-center text-gray-400 text-xs">{{ loop.index }}</td>
+                <td class="px-4 py-1.5 font-medium text-gray-800">{{ b.naziv_boje }}</td>
+                <td class="px-4 py-1.5 text-gray-500 text-xs">{{ b.pantone_naziv or "—" }}</td>
+                <td class="px-4 py-1.5 text-right font-mono text-xs">
+                    {% if b.kolicina_kg_1000 is not none %}{{ "%.3f"|format(b.kolicina_kg_1000) }}{% else %}—{% endif %}
+                </td>
+                <td class="px-4 py-1.5 text-center">
+                    <button type="button"
+                            hx-post="/tehnoloski-postupci/{{ n.id }}/boje/{{ b.id }}/obrisi"
+                            hx-target="#boje-sekcija"
+                            hx-swap="outerHTML"
+                            hx-confirm="Obrisati boju '{{ b.naziv_boje }}'?"
+                            class="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 text-red-400 hover:text-red-600 border border-gray-300 rounded transition-all">
+                        ✕
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="px-4 py-3 text-sm text-gray-400">Nema dodanih boja.</p>
+    {% endif %}
+
+    {# Add row #}
+    <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+        <form hx-post="/tehnoloski-postupci/{{ n.id }}/boje/dodaj"
+              hx-target="#boje-sekcija"
+              hx-swap="outerHTML"
+              class="flex items-end gap-2 flex-wrap">
+            <div>
+                <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">Naziv boje *</label>
+                <input type="text" name="naziv_boje" required placeholder="npr. Process Black"
+                       class="border border-gray-300 rounded px-2 py-1 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">Pantone / oznaka</label>
+                <input type="text" name="pantone_naziv" placeholder="npr. 3597"
+                       class="border border-gray-300 rounded px-2 py-1 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">kg / 1000 araka</label>
+                <input type="number" name="kolicina_kg_1000" step="0.001" min="0" placeholder="0.000"
+                       class="border border-gray-300 rounded px-2 py-1 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button type="submit"
+                    class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition-colors">
+                + Dodaj boju
+            </button>
+        </form>
+    </div>
+
+</div>

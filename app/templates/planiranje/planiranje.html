@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Planiranje tiska{% endblock %}
+
+{% block content %}
+<div class="bg-amber-100 border border-amber-300 text-amber-800 text-sm rounded-lg px-4 py-2 mb-3 max-w-4xl">
+    ⚠ <strong>U IZRADI (WIP)</strong> — ovaj ERP modul je nacrt; prava automatizacija planiranja radi se kao zaseban alat nad Excelom.
+</div>
+<div class="max-w-4xl">
+    <div class="flex items-start justify-between mb-4 gap-3">
+        <div>
+            <h1 class="text-xl font-bold text-gray-800">Planiranje tiska — kalkulator</h1>
+            <p class="text-sm text-gray-500 mt-0.5">
+                Za nalog (materijal + format + boje + naklada) izračunaj <strong>dopuštene strojeve</strong>
+                i <strong>trajanje po stroju</strong> (PRIP + RAD + PRA).
+            </p>
+        </div>
+        <a href="/planiranje/raspored" class="shrink-0 px-4 py-2 rounded bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold">Raspored po stroju →</a>
+    </div>
+
+    <form hx-post="/planiranje/izracun" hx-target="#rez" hx-swap="innerHTML"
+          class="bg-white rounded-lg border border-gray-300 shadow-md p-5 mb-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <label class="col-span-2 md:col-span-2 text-sm">
+                <span class="block font-semibold text-gray-600 mb-1">Šifra materijala (papir)</span>
+                <input name="materijal_sifra" placeholder="opcionalno — za mjesto troška"
+                       class="w-full border border-gray-400 rounded px-2 py-1.5">
+            </label>
+            <label class="text-sm">
+                <span class="block font-semibold text-gray-600 mb-1">Naklada (et)</span>
+                <input name="naklada" type="number" required value="150000"
+                       class="w-full border border-gray-400 rounded px-2 py-1.5 font-mono">
+            </label>
+            <label class="text-sm">
+                <span class="block font-semibold text-gray-600 mb-1">Kontakata (et/arak)</span>
+                <input name="kontakata" type="number" required value="104"
+                       class="w-full border border-gray-400 rounded px-2 py-1.5 font-mono">
+            </label>
+
+            <label class="text-sm">
+                <span class="block font-semibold text-gray-600 mb-1">Broj boja</span>
+                <input name="broj_boja" type="number" required value="6"
+                       class="w-full border border-gray-400 rounded px-2 py-1.5 font-mono">
+            </label>
+            <label class="text-sm">
+                <span class="block font-semibold text-gray-600 mb-1">Format X (cm)</span>
+                <input name="format_x_cm" type="number" step="0.1" required value="63.5"
+                       class="w-full border border-gray-400 rounded px-2 py-1.5 font-mono">
+            </label>
+            <label class="text-sm">
+                <span class="block font-semibold text-gray-600 mb-1">Format Y (cm)</span>
+                <input name="format_y_cm" type="number" step="0.1" required value="92"
+                       class="w-full border border-gray-400 rounded px-2 py-1.5 font-mono">
+            </label>
+            <label class="text-sm">
+                <span class="block font-semibold text-gray-600 mb-1">Normativ (ar/h)</span>
+                <input name="normativ" type="number" placeholder="po papiru, npr. 10000"
+                       class="w-full border border-gray-400 rounded px-2 py-1.5 font-mono">
+            </label>
+
+            <label class="text-sm">
+                <span class="block font-semibold text-gray-600 mb-1">Papir tip (fallback)</span>
+                <select name="papir_tip" class="w-full border border-gray-400 rounded px-2 py-1.5">
+                    <option value="bijeli">bijeli</option>
+                    <option value="metal">metal</option>
+                </select>
+            </label>
+            <label class="text-sm">
+                <span class="block font-semibold text-gray-600 mb-1">Otpad (ar, makeready)</span>
+                <input name="otpad" type="number" value="600"
+                       class="w-full border border-gray-400 rounded px-2 py-1.5 font-mono">
+            </label>
+            <label class="text-sm">
+                <span class="block font-semibold text-gray-600 mb-1">Priprema (min)</span>
+                <input name="priprema_min" type="number" value="45"
+                       class="w-full border border-gray-400 rounded px-2 py-1.5 font-mono">
+            </label>
+            <label class="text-sm">
+                <span class="block font-semibold text-gray-600 mb-1">Pranje (min)</span>
+                <input name="pranje_min" type="number" value="15"
+                       class="w-full border border-gray-400 rounded px-2 py-1.5 font-mono">
+            </label>
+        </div>
+
+        <div class="flex items-center gap-5 mt-4">
+            <label class="flex items-center gap-2 text-sm font-semibold text-gray-600">
+                <input type="checkbox" name="treba_uv"> Treba UV
+            </label>
+            <label class="flex items-center gap-2 text-sm font-semibold text-gray-600">
+                <input type="checkbox" name="treba_lak"> Treba lak
+            </label>
+            <button class="ml-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded px-5 py-2">
+                Izračunaj
+            </button>
+        </div>
+    </form>
+
+    <div id="rez"></div>
+</div>
+{% endblock %}

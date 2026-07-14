@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}{% if n %}{{ n.naziv }}{% else %}Novi normativ{% endif %}{% endblock %}
+
+{% block content %}
+{% include "tehnoloski_postupci/_wip_banner.html" %}
+
+{# ── Header breadcrumb ───────────────────────────────────────────────────── #}
+<div class="flex items-center gap-2 mb-4 text-sm">
+    <a href="/tehnoloski-postupci" class="text-slate-500 hover:text-slate-800">← Lista normativa</a>
+    <span class="text-gray-300">/</span>
+    <span class="font-semibold text-gray-700">
+        {% if n %}{{ n.naziv }}{% else %}Novi normativ{% endif %}
+    </span>
+    {% if n %}
+    <span class="ml-auto text-xs text-gray-400">Izmijenjeno: {{ n.updated_at.strftime('%d.%m.%Y %H:%M') }}</span>
+    {% endif %}
+</div>
+
+{# ── Sekcija 1: Opći podaci (header form) ───────────────────────────────── #}
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden mb-5">
+    <div class="bg-slate-700 px-4 py-2.5">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-white">Opći podaci</h2>
+    </div>
+    <form method="post"
+          action="{% if n %}/tehnoloski-postupci/{{ n.id }}/header{% else %}/tehnoloski-postupci/novi{% endif %}"
+          class="p-4">
+
+        {% macro fi(name, label, value='', typ='text', step='', min='', placeholder='', cls='') %}
+        <div>
+            <label class="block text-[11px] font-semibold text-gray-500 mb-0.5">{{ label }}</label>
+            <input type="{{ typ }}" name="{{ name }}"
+                   value="{{ value if value is not none else '' }}"
+                   {% if step %}step="{{ step }}"{% endif %}
+                   {% if min %}min="{{ min }}"{% endif %}
+                   {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+                   class="w-full border border-gray-300 bg-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 {{ cls }}">
+        </div>
+        {% endmacro %}
+
+        {# Row 1: Naziv / Šifra / Kupac #}
+        <div class="grid grid-cols-12 gap-3 mb-3">
+            <div class="col-span-6">{{ fi('naziv', 'Naziv etikete *', n.naziv if n else '', placeholder='npr. Et.Pesto Genovese GEE 190g') }}</div>
+            <div class="col-span-3">{{ fi('sifra', 'Šifra', n.sifra if n else '') }}</div>
+            <div class="col-span-3">{{ fi('kupac', 'Kupac', n.kupac if n else '') }}</div>
+        </div>
+
+        {# Row 2: Serija / Koef / Arka / Podloga / Gram #}
+        <div class="grid grid-cols-12 gap-3 mb-3">
+            <div class="col-span-2">{{ fi('serija', 'Serija (kom)', n.serija if n else '', 'number', '100') }}</div>
+            <div class="col-span-2">{{ fi('koeficijent', 'Koeficijent', n.koeficijent if n else '', 'number', '1') }}</div>
+            <div class="col-span-2">{{ fi('arka_x', 'Arka X (mm)', n.arka_x if n else '', 'number', '1') }}</div>
+            <div class="col-span-2">{{ fi('arka_y', 'Arka Y (mm)', n.arka_y if n else '', 'number', '1') }}</div>
+            <div class="col-span-3">{{ fi('podloga', 'Podloga/papir', n.podloga if n else '', placeholder='npr. PARADE LABEL PRO 80') }}</div>
+            <div class="col-span-1">{{ fi('gramatura', 'g/m²', n.gramatura if n else '', 'number', '1') }}</div>
+        </div>
+
+        {# Row 3: Raspored / Dimenzije / Napust #}
+        <div class="grid grid-cols-12 gap-3 mb-3">
+            <div class="col-span-1">{{ fi('stupaca', 'Stupaca', n.stupaca if n else '', 'number', '1', '1') }}</div>
+            <div class="col-span-1">{{ fi('redova', 'Redova', n.redova if n else '', 'number', '1', '1') }}</div>
+            <div class="col-span-1">{{ fi('et_po_arku', 'Et/arku', n.et_po_arku if n else '', 'number', '1') }}</div>
+            <div class="col-span-2">{{ fi('et_xn', 'Et.netto X (mm)', n.et_xn if n else '', 'number', '0.5') }}</div>
+            <div class="col-span-2">{{ fi('et_yn', 'Et.netto Y (mm)', n.et_yn if n else '', 'number', '0.5') }}</div>
+            <div class="col-span-2">{{ fi('et_xb', 'Et.brutto X (mm)', n.et_xb if n else '', 'number', '0.5') }}</div>
+            <div class="col-span-2">{{ fi('et_yb', 'Et.brutto Y (mm)', n.et_yb if n else '', 'number', '0.5') }}</div>
+            <div class="col-span-1">{{ fi('napust', 'Napust (mm)', n.napust if n else '', 'number', '1') }}</div>
+        </div>
+
+        {# Row 4: Ukupno araka / Broj boja / Napomena #}
+        <div class="grid grid-cols-12 gap-3 mb-4">
+            <div class="col-span-2">{{ fi('ukupno_araka', 'Ukupno araka', n.ukupno_araka if n else '', 'number', '100') }}</div>
+            <div class="col-span-1">{{ fi('broj_boja', 'Br.boja', n.broj_boja if n else '', 'number', '1') }}</div>
+            <div class="col-span-9">
+                <label class="block text-[11px] font-semibold text-gray-500 mb-0.5">Napomena</label>
+                <input type="text" name="napomena" value="{{ n.napomena or '' if n else '' }}"
+                       class="w-full border border-gray-300 bg-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button type="submit"
+                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded transition-colors">
+                {% if n %}💾 Spremi izmjene{% else %}💾 Spremi i nastavi{% endif %}
+            </button>
+            {% if n %}
+            <form method="post" action="/tehnoloski-postupci/{{ n.id }}/obrisi" class="inline"
+                  onsubmit="return confirm('Obrisati normativ \'{{ n.naziv }}\'?')">
+                <button type="submit" class="px-3 py-2 text-xs text-red-500 hover:text-red-700 border border-red-200 hover:bg-red-50 rounded transition-colors">
+                    Obriši normativ
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+    </form>
+</div>
+
+{% if n %}
+
+{# ── Sekcija 2: Boje ─────────────────────────────────────────────────────── #}
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden mb-5">
+    <div class="bg-slate-700 px-4 py-2.5">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-white">Boje / prolazi</h2>
+    </div>
+    <div id="boje-sekcija">
+        {% include "tehnoloski_postupci/_boje.html" %}
+    </div>
+</div>
+
+{# ── Sekcija 3: Materijal ─────────────────────────────────────────────────── #}
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden mb-5">
+    <div class="bg-slate-700 px-4 py-2.5">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-white">Materijal</h2>
+    </div>
+    <div id="mat-sekcija">
+        {% include "tehnoloski_postupci/_materijali.html" %}
+    </div>
+</div>
+
+{# ── Sekcija 4+5: Operacije + Zbroj ──────────────────────────────────────── #}
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden mb-5">
+    <div class="bg-slate-700 px-4 py-2.5">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-white">Operacije</h2>
+    </div>
+    <div id="op-sekcija">
+        {% include "tehnoloski_postupci/_operacije.html" %}
+    </div>
+</div>
+
+{% else %}
+<div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-700 text-sm">
+    Spremi opće podatke da bi mogao dodavati boje, materijal i operacije.
+</div>
+{% endif %}
+
+{% endblock %}

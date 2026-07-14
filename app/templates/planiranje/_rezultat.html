@@ -1,0 +1,76 @@
+{% set r = rezultat %}
+
+{% if nalog.materijal_sifra %}
+<div class="bg-white rounded-lg border border-gray-300 shadow-sm p-3 mb-3 text-sm">
+    {% if r.materijal %}
+    <span class="text-gray-500">Materijal</span>
+    <span class="font-semibold text-gray-800">{{ r.materijal.naziv }}</span>
+    <span class="font-mono text-xs text-gray-400">({{ r.materijal.sifra }})</span>
+    {% if r.mjesta %}
+    <span class="text-gray-400 mx-1">· dopušteni strojevi:</span>
+    {% for m in r.mjesta %}<span class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">{{ m }}</span> {% endfor %}
+    {% else %}
+    <span class="text-gray-400 mx-1">· nema postavljeno mjesto troška → sve prese dolaze u obzir</span>
+    {% endif %}
+    {% else %}
+    <span class="text-amber-700">⚠ Materijal „{{ nalog.materijal_sifra }}" nije pronađen — mjesto troška se preskače.</span>
+    {% endif %}
+</div>
+{% endif %}
+
+{# ── Dopuštene prese ── #}
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden mb-3">
+    <div class="bg-slate-700 px-4 py-2.5">
+        <span class="text-xs font-bold uppercase tracking-widest text-white">Dopušteni strojevi — trajanje</span>
+    </div>
+    {% if r.dopusteni %}
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="bg-slate-800 text-white text-xs uppercase tracking-wide">
+                <th class="px-3 py-2 text-left">Stroj</th>
+                <th class="px-3 py-2 text-right">Otisaka</th>
+                <th class="px-3 py-2 text-right">Brzina ar/h</th>
+                <th class="px-3 py-2 text-right">PRIP</th>
+                <th class="px-3 py-2 text-right">RAD</th>
+                <th class="px-3 py-2 text-right">PRA</th>
+                <th class="px-3 py-2 text-right">SATI</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for d in r.dopusteni %}
+        <tr class="border-b border-gray-100 even:bg-gray-50 {% if loop.first %}bg-green-50 even:bg-green-50{% endif %}">
+            <td class="px-3 py-2 font-semibold text-gray-800">
+                {{ d.stroj.sifra }} <span class="text-xs font-normal text-gray-400">{{ d.stroj.naziv }}</span>
+                {% if loop.first %}<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-green-600 text-white">najbrže</span>{% endif %}
+            </td>
+            <td class="px-3 py-2 text-right font-mono">{{ d.vrijeme.otisaka | fmtn }}</td>
+            <td class="px-3 py-2 text-right font-mono text-gray-500">{{ d.vrijeme.brzina | fmtn }}</td>
+            <td class="px-3 py-2 text-right font-mono text-gray-500">{{ d.vrijeme.priprema_min | fmtmin }}</td>
+            <td class="px-3 py-2 text-right font-mono">{{ d.vrijeme.rad_min | fmtmin }}</td>
+            <td class="px-3 py-2 text-right font-mono text-gray-500">{{ d.vrijeme.pranje_min | fmtmin }}</td>
+            <td class="px-3 py-2 text-right font-mono font-bold text-gray-900">{{ d.vrijeme.sati_min | fmtmin }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="p-4 text-sm text-red-600 font-semibold">✕ Nijedan stroj ne zadovoljava uvjete (vidi dolje).</div>
+    {% endif %}
+</div>
+
+{# ── Nedopuštene prese ── #}
+{% if r.nedopusteni %}
+<div class="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden">
+    <div class="px-4 py-2 bg-gray-100 text-xs font-bold uppercase tracking-widest text-gray-500">Nedopušteni strojevi</div>
+    <table class="w-full text-sm">
+        <tbody>
+        {% for n in r.nedopusteni %}
+        <tr class="border-b border-gray-100">
+            <td class="px-3 py-2 font-semibold text-gray-600 w-40">{{ n.stroj.sifra }}</td>
+            <td class="px-3 py-2 text-red-600">{{ n.razlozi | join("; ") }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}

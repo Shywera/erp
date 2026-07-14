@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Materijali{% endblock %}
+{% block content %}
+
+<div class="flex justify-between items-center mb-5">
+    <div>
+        <h1 class="text-xl font-bold text-gray-800">Materijali</h1>
+        <p class="text-sm text-gray-500 mt-0.5">Šifrarnik svih artikala i materijala</p>
+    </div>
+    <a href="/materijali/novi"
+       class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow">
+        + Dodaj materijal
+    </a>
+</div>
+
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden">
+    <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+        <input type="search" name="q"
+               placeholder="Pretraži po šifri, nazivu, dobavljaču, kategoriji..."
+               class="w-96 border border-gray-400 rounded-lg px-3 py-1.5 text-sm bg-white text-gray-900
+                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+               hx-get="/materijali/search"
+               hx-trigger="input changed delay:300ms, search"
+               hx-target="#mat-result-wrapper"
+               hx-swap="innerHTML">
+    </div>
+
+    <div id="mat-result-wrapper"
+         hx-get="/materijali/search"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+        <div class="px-3 py-10 text-center text-gray-400 text-sm">Učitavam...</div>
+    </div>
+</div>
+{% endblock %}

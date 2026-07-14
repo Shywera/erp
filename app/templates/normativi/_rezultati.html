@@ -1,0 +1,293 @@
+{% if error %}
+<div class="bg-red-50 border border-red-300 rounded-lg p-4 text-red-700 font-medium">
+    ⚠ {{ error }}
+</div>
+{% else %}
+
+{% macro tile(label, value, big=false, color='') %}
+<div class="{% if color %}{{ color }}{% else %}bg-slate-50 border border-gray-200{% endif %} rounded-lg p-3 text-center">
+    <div class="text-[10px] font-bold uppercase tracking-wider {% if color %}opacity-80{% else %}text-gray-500{% endif %}">{{ label }}</div>
+    <div class="{% if big %}text-2xl{% else %}text-lg{% endif %} font-bold {% if color %}text-white{% else %}text-slate-800{% endif %} mt-0.5">{{ value }}</div>
+</div>
+{% endmacro %}
+
+{% macro small_tile(label, value) %}
+<div class="bg-gray-50 border border-gray-200 rounded p-2 text-center">
+    <div class="text-[9px] text-gray-400 font-semibold uppercase tracking-wide">{{ label }}</div>
+    <div class="text-sm font-bold text-slate-700 mt-0.5">{{ value }}</div>
+</div>
+{% endmacro %}
+
+{% macro detail_block(label) %}
+<details class="mt-2 border border-gray-200 rounded-lg overflow-hidden">
+    <summary class="cursor-pointer px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-50 hover:bg-slate-100 select-none list-none flex items-center gap-2">
+        <span class="text-gray-400 text-xs">▶</span> {{ label }}
+    </summary>
+    <div class="p-3 grid grid-cols-4 gap-2">
+        {{ caller() }}
+    </div>
+</details>
+{% endmacro %}
+
+{# ── Layout arka ──────────────────────────────────────────────────────────── #}
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden mb-4">
+    <div class="bg-slate-700 px-4 py-2.5">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-white">Raspored na arku</h2>
+    </div>
+    <div class="p-4 grid grid-cols-6 gap-3">
+        {{ tile('Etiketa na arku', layout.et_na_arku, big=true, color='bg-blue-600') }}
+        {{ tile('Po X osi', layout.et_po_x) }}
+        {{ tile('Po Y osi', layout.et_po_y) }}
+        {{ tile('Bočno D/L (mm)', "%.1f"|format(layout.bocno_desno)) }}
+        <div class="bg-slate-50 border border-gray-200 rounded-lg p-3 text-center">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Gornji napust (mm)</div>
+            <div class="text-lg font-bold {% if layout.gornji_napust < 0 %}text-red-600{% else %}text-slate-800{% endif %} mt-0.5">{{ "%.1f"|format(layout.gornji_napust) }}</div>
+        </div>
+        {{ tile('Netto araka', layout.netto_araka | fmtn) }}
+    </div>
+    {% if layout.gornji_napust < 0 %}
+    <div class="px-4 py-2 text-sm text-amber-700 bg-amber-50 border-t border-amber-200">
+        ⚠ Gornji napust je negativan — provjeri grajfer i dimenzije etikete.
+    </div>
+    {% endif %}
+</div>
+
+{# ── Tabovi ───────────────────────────────────────────────────────────────── #}
+<div x-data="{ tab: 'rezanje' }">
+
+    <div class="flex gap-0 mb-4 border-b border-gray-300">
+        <button @click="tab='rezanje'"
+                :class="tab=='rezanje' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                class="px-5 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors">
+            ✂ Rezanje
+        </button>
+        <button @click="tab='stancanje'"
+                :class="tab=='stancanje' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                class="px-5 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors">
+            ▣ Štancanje
+        </button>
+        <button @click="tab='tisak'"
+                :class="tab=='tisak' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                class="px-5 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors">
+            ◎ Tisak
+        </button>
+    </div>
+
+{# ══ TAB: REZANJE ════════════════════════════════════════════════════════════ #}
+<div x-show="tab=='rezanje'" class="space-y-4">
+
+    {# POLAR 137 #}
+    <div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden">
+        <div class="bg-slate-700 px-4 py-2.5 flex justify-between items-center">
+            <h3 class="text-xs font-bold uppercase tracking-widest text-white">POLAR 137</h3>
+            <span class="text-[10px] text-slate-400 uppercase tracking-wide">Strip rezanje</span>
+        </div>
+        <div class="p-4 grid grid-cols-4 gap-3">
+            {{ tile('Normativ (ar/h)', r137.normativ_final | fmtn, big=true, color='bg-blue-600') }}
+            {{ tile('Araka/smjenu (7h)', (r137.normativ_final * 7) | int | fmtn) }}
+            {{ tile('Broj paleta', r137.broj_paleta) }}
+            {{ tile('Kanti za otpad', r137.broj_kanti) }}
+        </div>
+        <div class="px-4 pb-3 space-y-0">
+            {% call detail_block('Detalji POLAR 137') %}
+                {{ small_tile('Broj rezova (traka)', r137.broj_rezova) }}
+                {{ small_tile('Otpad ukupno (kg)', "%.1f"|format(r137.ukupno_otpada)) }}
+                {{ small_tile('Ponavljanja (×1000 ar)', r137.ponavljanja) }}
+                {{ small_tile('', '') }}
+                {{ small_tile('Priprema', r137.priprema_sec | sfmt) }}
+                {{ small_tile('Ukupno rezanje', "%.1f h"|format(r137.total_sec / 3600)) }}
+                {{ small_tile('Vibriranje', "%.1f h"|format(r137.vibriranje_total_sec / 3600)) }}
+                {{ small_tile('', '') }}
+            {% endcall %}
+            {% set _freq = r137.ponavljanja // (r137.broj_kanti if r137.broj_kanti > 0 else 1) %}
+            {% call detail_block('Dodatni detalji POLAR 137') %}
+                {{ small_tile('Pražnjenje kante', r137.broj_kanti ~ '×') }}
+                {{ small_tile('Učestalost kante', 'svakih ' ~ (_freq | fmtn) ~ ' × 1000 ar') }}
+                {{ small_tile('Transport paleta', r137.broj_paleta ~ ' pal × 2') }}
+                {{ small_tile('Dulja operacija', 'Vibriranje' if r137.vibriranje_total_sec > r137.total_sec else 'Rezanje') }}
+                {{ small_tile('Priprema', r137.priprema_sec | sfmt) }}
+                {{ small_tile('Ukupno rezanje', r137.total_sec | sfmt) }}
+                {{ small_tile('Ukupno vibriranje', r137.vibriranje_total_sec | sfmt) }}
+                {{ small_tile('Otpad/1000 ar', "%.2f kg"|format(r137.kg_otpad)) }}
+            {% endcall %}
+        </div>
+    </div>
+
+    {# SC20 #}
+    <div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden">
+        <div class="bg-slate-700 px-4 py-2.5 flex justify-between items-center">
+            <h3 class="text-xs font-bold uppercase tracking-widest text-white">SC20</h3>
+            <span class="text-[10px] text-slate-400 uppercase tracking-wide">Trake + na gotovo + pakiranje</span>
+        </div>
+        <div class="p-4 grid grid-cols-4 gap-3">
+            {{ tile('Kombinirani (et/h)', sc.norm_ukupno | fmtn, big=true, color='bg-blue-600') }}
+            {{ tile('Trake (ar/h)', sc.strip.normativ_final | int | fmtn) }}
+            {{ tile('Na gotovo (et/h)', sc.finish.normativ_finish | fmtn) }}
+            {{ tile('Kontra os', sc.finish.kontra_os) }}
+        </div>
+        <div class="p-4 pt-0 grid grid-cols-2 gap-3">
+            {{ tile('Pakiranje — 1 operater (et/h)', sc.finish.normativ_pak_1op | fmtn) }}
+            {{ tile('Pakiranje — 2 operatera (et/h)', sc.finish.normativ_pak_2op | fmtn) }}
+        </div>
+        <div class="px-4 pb-3 space-y-0">
+            {% call detail_block('Detalji SC20 — Trake') %}
+                {{ small_tile('Rezovi (traka/ar)', sc.strip.broj_rezova) }}
+                {{ small_tile('Ponavljanja', sc.strip.ponavljanja) }}
+                {{ small_tile('Paleta (trake)', sc.strip.broj_paleta) }}
+                {{ small_tile('Otpad trake (kg)', "%.1f"|format(sc.strip.ukupno_otpada)) }}
+            {% endcall %}
+            {% set _fsc = sc.strip.ponavljanja // (sc.strip.broj_kanti if sc.strip.broj_kanti > 0 else 1) %}
+            {% call detail_block('Dodatni detalji SC20 — Trake') %}
+                {{ small_tile('Pražnjenje kante', sc.strip.broj_kanti ~ '×') }}
+                {{ small_tile('Učestalost kante', 'svakih ' ~ (_fsc | fmtn) ~ ' × 1000 ar') }}
+                {{ small_tile('Transport paleta', sc.strip.broj_paleta ~ ' pal × 2') }}
+                {{ small_tile('Priprema', sc.strip.priprema_sec | sfmt) }}
+            {% endcall %}
+            {% call detail_block('Detalji SC20 — Na gotovo + pakiranje') %}
+                {{ small_tile('Max traka u stroju', sc.finish.max_traka) }}
+                {{ small_tile('Rezovi finish', sc.finish.br_rez_finish) }}
+                {{ small_tile('Ponavljanja finish', sc.finish.ponavljanja_finish) }}
+                {{ small_tile('Međurez', 'DA' if sc.finish.medurez else 'NE') }}
+                {{ small_tile('Ukupno bunteva', sc.finish.uk_buntevi | fmtn) }}
+                {{ small_tile('Broj kutija', sc.finish.broj_kutija | fmtn) }}
+                {{ small_tile('Paleta gotova roba', sc.finish.paleta_gotova) }}
+                {{ small_tile('Otpad finish (kg)', "%.1f"|format(sc.finish.otpad_finish)) }}
+            {% endcall %}
+            {% call detail_block('Dodatni detalji SC20 — Na gotovo + pakiranje') %}
+                {{ small_tile('Pražnjenje kante (finish)', sc.finish.kanti_finish ~ '×') }}
+                {{ small_tile('Ponavljanja finish', sc.finish.ponavljanja_finish | fmtn) }}
+                {{ small_tile('Otpad finish', "%.1f kg"|format(sc.finish.otpad_finish)) }}
+                {{ small_tile('Međurez', 'DA' if sc.finish.medurez else 'NE') }}
+            {% endcall %}
+        </div>
+    </div>
+
+    {# MCS 115 #}
+    <div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden">
+        <div class="bg-slate-700 px-4 py-2.5 flex justify-between items-center">
+            <h3 class="text-xs font-bold uppercase tracking-widest text-white">MCS 115</h3>
+            <span class="text-[10px] text-slate-400 uppercase tracking-wide">Trake + na gotovo + pakiranje</span>
+        </div>
+        <div class="p-4 grid grid-cols-4 gap-3">
+            {{ tile('Kombinirani (et/h)', mcs.norm_ukupno | fmtn, big=true, color='bg-blue-600') }}
+            {{ tile('Trake (ar/h)', mcs.strip.normativ_final | int | fmtn) }}
+            {{ tile('Na gotovo (et/h)', mcs.finish.normativ_finish | fmtn) }}
+            {{ tile('Kontra os', mcs.finish.kontra_os) }}
+        </div>
+        <div class="p-4 pt-0 grid grid-cols-2 gap-3">
+            {{ tile('Pakiranje — 1 operater (et/h)', mcs.finish.normativ_pak_1op | fmtn) }}
+            {{ tile('', '') }}
+        </div>
+        <div class="px-4 pb-3 space-y-0">
+            {% call detail_block('Detalji MCS 115') %}
+                {{ small_tile('Rezovi traka', mcs.strip.broj_rezova) }}
+                {{ small_tile('Max traka u stroju', mcs.finish.max_traka) }}
+                {{ small_tile('Bunteva ukupno', mcs.finish.uk_buntevi | fmtn) }}
+                {{ small_tile('Kutija', mcs.finish.broj_kutija | fmtn) }}
+            {% endcall %}
+            {% set _fmcs = mcs.strip.ponavljanja // (mcs.strip.broj_kanti if mcs.strip.broj_kanti > 0 else 1) %}
+            {% call detail_block('Dodatni detalji MCS 115') %}
+                {{ small_tile('Pražnjenje kante (trake)', mcs.strip.broj_kanti ~ '×') }}
+                {{ small_tile('Učestalost kante', 'svakih ' ~ (_fmcs | fmtn) ~ ' × 1000 ar') }}
+                {{ small_tile('Transport paleta', mcs.strip.broj_paleta ~ ' pal × 2') }}
+                {{ small_tile('Priprema trake', mcs.strip.priprema_sec | sfmt) }}
+                {{ small_tile('Pražnjenje kante (finish)', mcs.finish.kanti_finish ~ '×') }}
+                {{ small_tile('Ponavljanja finish', mcs.finish.ponavljanja_finish | fmtn) }}
+                {{ small_tile('Otpad finish', "%.1f kg"|format(mcs.finish.otpad_finish)) }}
+                {{ small_tile('Paleta gotova roba', mcs.finish.paleta_gotova) }}
+            {% endcall %}
+        </div>
+    </div>
+
+</div>{# end rezanje #}
+
+{# ══ TAB: ŠTANCANJE ══════════════════════════════════════════════════════════ #}
+<div x-show="tab=='stancanje'" x-cloak class="space-y-4">
+
+    {% for naziv_s, r in stanc %}
+    <div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden">
+        <div class="bg-slate-700 px-4 py-2.5 flex justify-between items-center">
+            <h3 class="text-xs font-bold uppercase tracking-widest text-white">{{ naziv_s }}</h3>
+            <span class="text-[10px] text-slate-400 uppercase tracking-wide">Štancanje + pakiranje</span>
+        </div>
+        <div class="p-4 grid grid-cols-4 gap-3">
+            {{ tile('Normativ štancanja (et/h)', r.normativ_stanc | fmtn, big=true, color='bg-blue-600') }}
+            {{ tile('Normativ pakiranja (et/h)', r.normativ_pak | fmtn) }}
+            {{ tile('Broj kutija', r.broj_kutija | fmtn) }}
+            {{ tile('Broj paleta', r.broj_paleta) }}
+        </div>
+        <div class="px-4 pb-3 space-y-0">
+            {% call detail_block('Detalji ' ~ naziv_s) %}
+                {{ small_tile('Rezovi/traci', r.broj_rezova) }}
+                {{ small_tile('Broj traka (×1000)', "%.1f"|format(r.broj_traka)) }}
+                {{ small_tile('Kanti otpad', r.broj_kanti) }}
+                {{ small_tile('Otpad ukupno (kg)', "%.1f"|format(r.ukupno_ot)) }}
+                {{ small_tile('Štancanje ukupno', "%.1f h"|format(r.total_stanc_sec / 3600)) }}
+                {{ small_tile('Pakiranje ukupno', "%.1f h"|format(r.total_pak_sec / 3600)) }}
+                {{ small_tile('', '') }}
+                {{ small_tile('', '') }}
+            {% endcall %}
+            {% call detail_block('Dodatni detalji ' ~ naziv_s) %}
+                {{ small_tile('Pražnjenje kante', r.broj_kanti ~ '×') }}
+                {{ small_tile('Broj traka', "%.0f × 1000"|format(r.broj_traka)) }}
+                {{ small_tile('Rezovi po traci', r.broj_rezova) }}
+                {{ small_tile('Otpad ukupno', "%.1f kg"|format(r.ukupno_ot)) }}
+                {{ small_tile('Priprema', r.priprema_sec | sfmt) }}
+                {{ small_tile('Ukupno štancanje', r.total_stanc_sec | sfmt) }}
+                {{ small_tile('Ukupno pakiranje', r.total_pak_sec | sfmt) }}
+                {{ small_tile('Broj paleta', r.broj_paleta) }}
+            {% endcall %}
+        </div>
+    </div>
+    {% endfor %}
+
+</div>{# end stancanje #}
+
+{# ══ TAB: TISAK ══════════════════════════════════════════════════════════════ #}
+<div x-show="tab=='tisak'" x-cloak class="space-y-4">
+
+    {% for naziv_t, r in tisak %}
+    <div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden">
+        <div class="bg-slate-700 px-4 py-2.5 flex justify-between items-center">
+            <h3 class="text-xs font-bold uppercase tracking-widest text-white">{{ naziv_t }}</h3>
+            <span class="text-[10px] text-slate-400 uppercase tracking-wide">Offset tisak</span>
+        </div>
+        <div class="p-4 grid grid-cols-4 gap-3">
+            {{ tile('Normativ tiska (ar/h)', r.normativ_tisk | fmtn, big=true, color='bg-blue-600') }}
+            {{ tile('Priprema', "%.2f h"|format(r.priprema_h)) }}
+            {{ tile('Pranje stroja', "%.2f h"|format(r.pranje_h)) }}
+            {{ tile('Brutto za izdati', r.brutto_izdati | fmtn) }}
+        </div>
+        <div class="px-4 pb-3 space-y-0">
+            {% call detail_block('Detalji ' ~ naziv_t) %}
+                {{ small_tile('Netto araka', r.netto_araka | fmtn) }}
+                {{ small_tile('Za doradu', r.za_doradu | fmtn) }}
+                {{ small_tile('Očekivani brutto', r.ocekivani_brutto | fmtn) }}
+                {{ small_tile('', '') }}
+                {{ small_tile('Paleta ulaganje', r.paleta_ulaz) }}
+                {{ small_tile('Paleta izlaganje', r.paleta_izlag) }}
+                {{ small_tile('Prolaganja', r.prolaganja) }}
+                {{ small_tile('', '') }}
+                {{ small_tile('Škart (arci)', r.skart | fmtn) }}
+                {{ small_tile('Ukupno tisak', "%.1f h"|format(r.uk_tisak_sec / 3600)) }}
+                {{ small_tile('Priprema (sec)', r.priprema_sec | fmtn) }}
+                {{ small_tile('', '') }}
+            {% endcall %}
+            {% call detail_block('Dodatni detalji ' ~ naziv_t) %}
+                {{ small_tile('Prolaganja', r.prolaganja) }}
+                {{ small_tile('Zamjena paleta (ul+izl)', (r.paleta_ulaz + r.paleta_izlag) ~ '×') }}
+                {{ small_tile('Škart arci', r.skart | fmtn) }}
+                {{ small_tile('Ukupno tisak', r.uk_tisak_sec | sfmt) }}
+                {{ small_tile('Priprema', r.priprema_sec | sfmt) }}
+                {{ small_tile('Pranje stroja', r.pranje_sec | sfmt) }}
+                {{ small_tile('Očekivani brutto', r.ocekivani_brutto | fmtn) }}
+                {{ small_tile('Za doradu', r.za_doradu | fmtn) }}
+            {% endcall %}
+        </div>
+    </div>
+    {% endfor %}
+
+</div>{# end tisak #}
+
+</div>{# end x-data tabs #}
+{% endif %}

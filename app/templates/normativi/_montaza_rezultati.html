@@ -1,0 +1,101 @@
+{% if greska %}
+<div class="bg-red-50 border border-red-300 rounded-lg p-4 text-red-700 font-medium">
+    ⚠ {{ greska }}
+</div>
+{% elif not rezultati %}
+<div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-700 text-sm">
+    Nijedna etiketa ne stane na raspoložive formate.
+</div>
+{% else %}
+
+{% set n = p.broj_etiketa %}
+{% set kol_label = 'Ukupno kom' if n == 1 else 'Ukupno kompleta' %}
+
+{# ── Tablica rezultata ──────────────────────────────────────────────────────── #}
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden mb-5">
+    <div class="bg-slate-700 px-4 py-2.5">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-white">Rezultati — sortirano po ocjeni</h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-slate-800 text-white text-[11px] uppercase tracking-wide">
+                    <th class="px-3 py-2 text-left">Format</th>
+                    <th class="px-3 py-2 text-right">{{ kol_label }}</th>
+                    <th class="px-3 py-2 text-center">A (stup×red)</th>
+                    {% if n >= 2 %}<th class="px-3 py-2 text-center">B (stup×red)</th>{% endif %}
+                    {% if n == 3 %}<th class="px-3 py-2 text-center">C (stup×red)</th>{% endif %}
+                    {% if n >= 2 %}<th class="px-3 py-2 text-center">Višak</th>{% endif %}
+                    <th class="px-3 py-2 text-center">Škart</th>
+                    <th class="px-3 py-2 text-right">Ocjena</th>
+                    <th class="px-3 py-2 text-center">Graf</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in rezultati %}
+            {% set r = item.rezultat %}
+            {% set prvi = loop.first %}
+                <tr class="{% if prvi %}bg-green-50 font-semibold{% elif loop.index0 % 2 == 0 %}bg-white{% else %}bg-gray-50{% endif %} hover:bg-blue-50 border-b border-gray-100">
+                    <td class="px-3 py-2 {% if prvi %}text-green-700{% endif %}">
+                        {% if prvi %}🟢 {% endif %}{{ item.naziv }}
+                    </td>
+                    <td class="px-3 py-2 text-right {% if prvi %}text-green-700{% endif %}">{{ r.kompleta | int }}</td>
+                    <td class="px-3 py-2 text-center text-gray-600">{{ r.stupaca_a }}×{{ r.u_visinu_a }} = {{ r.ukupno_a }} kom</td>
+                    {% if n >= 2 %}
+                    <td class="px-3 py-2 text-center text-gray-600">{{ r.stupaca_b }}×{{ r.u_visinu_b }} = {{ r.ukupno_b }} kom</td>
+                    {% endif %}
+                    {% if n == 3 %}
+                    <td class="px-3 py-2 text-center text-gray-600">{{ r.stupaca_c }}×{{ r.u_visinu_c }} = {{ r.ukupno_c }} kom</td>
+                    {% endif %}
+                    {% if n == 2 %}
+                    <td class="px-3 py-2 text-center text-gray-500">{{ (r.ukupno_a - r.kompleta) | int }} / {{ (r.ukupno_b - r.kompleta) | int }}</td>
+                    {% elif n == 3 %}
+                    <td class="px-3 py-2 text-center text-gray-500">{{ (r.ukupno_a - r.kompleta) | int }} / {{ (r.ukupno_b - r.kompleta) | int }} / {{ (r.ukupno_c - r.kompleta) | int }}</td>
+                    {% endif %}
+                    <td class="px-3 py-2 text-center {% if r.skart_postotak > 30 %}text-red-600{% elif r.skart_postotak > 15 %}text-amber-600{% else %}text-gray-600{% endif %}">{{ r.skart_postotak }}%</td>
+                    <td class="px-3 py-2 text-right font-mono {% if prvi %}text-green-700{% else %}text-slate-700{% endif %}">{{ "%.1f"|format(item.ocjena) }}</td>
+                    <td class="px-3 py-2 text-center">
+                        <button type="button"
+                                hx-post="/normativi/montaza/chart"
+                                hx-include="#montaza-form"
+                                hx-vals='{"odabrani_format": "{{ item.naziv }}"}'
+                                hx-target="#chart-area"
+                                hx-swap="innerHTML"
+                                hx-indicator="#chart-spinner"
+                                class="text-xs px-2 py-0.5 bg-slate-100 hover:bg-blue-600 hover:text-white border border-gray-300 hover:border-blue-600 rounded transition-colors">
+                            Prikaži
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# ── Grafički prikaz ────────────────────────────────────────────────────────── #}
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden mb-5">
+    <div class="bg-slate-700 px-4 py-2.5 flex justify-between items-center">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-white">
+            Grafički prikaz
+            <span id="chart-spinner" class="htmx-indicator ml-2 text-slate-400 normal-case font-normal text-xs">↻ generiranje...</span>
+        </h2>
+        <form hx-post="/normativi/montaza/pdf"
+              hx-include="#montaza-form"
+              hx-target="this"
+              id="pdf-form">
+            <input type="hidden" name="odabrani_format" id="pdf-format" value="{{ rezultati[0].naziv if rezultati else '' }}">
+            <button type="submit"
+                    class="text-[10px] font-semibold text-slate-400 hover:text-white border border-slate-600 hover:border-slate-400 px-2 py-1 rounded transition-colors">
+                🖨 PDF
+            </button>
+        </form>
+    </div>
+    <div class="p-4 min-h-[200px] flex items-center justify-center">
+        <div id="chart-area" class="w-full text-center text-gray-400 text-sm">
+            Klikni <strong>Prikaži</strong> na željenom formatu.
+        </div>
+    </div>
+</div>
+
+{% endif %}

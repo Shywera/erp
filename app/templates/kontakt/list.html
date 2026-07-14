@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Kupci / Dobavljači{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+    <h1 class="text-xl font-bold text-gray-800">Kupci / Dobavljači</h1>
+    <a href="/kupci/novi"
+       class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded transition-colors">
+        + Novi kontakt
+    </a>
+</div>
+
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden"
+     x-data="{
+         tip: '',
+         q: '',
+         load() {
+             const params = new URLSearchParams();
+             if (this.tip) params.set('tip', this.tip);
+             if (this.q)   params.set('q',   this.q);
+             htmx.ajax('GET', '/kupci/search?' + params.toString(), {target: '#tbody', swap: 'innerHTML'});
+         }
+     }">
+
+    {# ── Toolbar ─────────────────────────────────────────────────────────── #}
+    <div class="bg-slate-700 px-4 py-3 flex items-center gap-4 flex-wrap">
+
+        {# Segmented filter #}
+        <div class="flex rounded overflow-hidden border border-slate-500 shrink-0">
+            <button type="button"
+                    @click="tip=''; load()"
+                    :class="tip === '' ? 'bg-blue-500 text-white border-blue-400' : 'text-slate-300 hover:bg-slate-600 hover:text-white'"
+                    class="px-3 py-1.5 text-xs font-semibold transition-colors border-r border-slate-500">
+                Svi
+            </button>
+            {% for t in tipovi %}
+            <button type="button"
+                    @click="tip='{{ t }}'; load()"
+                    :class="tip === '{{ t }}' ? 'bg-blue-500 text-white' : 'text-slate-300 hover:bg-slate-600 hover:text-white'"
+                    class="px-3 py-1.5 text-xs font-semibold transition-colors{% if not loop.last %} border-r border-slate-500{% endif %}">
+                {{ tip_label[t] }}
+            </button>
+            {% endfor %}
+        </div>
+
+        {# Search #}
+        <input type="search"
+               placeholder="Pretraži naziv / šifru / OIB / mjesto..."
+               x-model.debounce.300ms="q"
+               @input.debounce.300ms="load()"
+               @search="load()"
+               class="ml-auto px-3 py-1.5 text-xs rounded border border-slate-500 bg-slate-800 text-slate-200
+                      placeholder-slate-500 focus:outline-none focus:border-blue-400 focus:bg-slate-700 w-80 transition-colors">
+    </div>
+
+    {# ── Table ───────────────────────────────────────────────────────────── #}
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-slate-800 text-white text-[11px] uppercase tracking-wide">
+                    <th class="px-3 py-2 text-left w-24">Šifra</th>
+                    <th class="px-3 py-2 text-left">Naziv</th>
+                    <th class="px-3 py-2 text-center w-32">Tip</th>
+                    <th class="px-3 py-2 text-left w-24">OIB</th>
+                    <th class="px-3 py-2 text-left w-32">Mjesto</th>
+                    <th class="px-3 py-2 text-left w-40">Email / Tel</th>
+                    <th class="px-3 py-2 text-center w-20">Plaćanje</th>
+                    <th class="px-3 py-2 w-16"></th>
+                </tr>
+            </thead>
+            <tbody id="tbody"
+                   hx-get="/kupci/search"
+                   hx-trigger="load"
+                   hx-swap="innerHTML">
+                <tr><td colspan="8" class="px-3 py-8 text-center text-gray-400 text-sm">Učitavam...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

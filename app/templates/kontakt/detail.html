@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}{% if k %}{{ k.naziv }}{% else %}Novi kontakt{% endif %} — Kontakti{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-2 mb-4">
+    <a href="/kupci" class="text-sm text-blue-600 hover:underline">← Kontakti</a>
+    <span class="text-gray-400">/</span>
+    <span class="text-sm font-semibold text-gray-700">
+        {% if k %}{{ k.naziv }}{% else %}Novi kontakt{% endif %}
+    </span>
+    {% if k %}
+    <span class="text-[11px] px-1.5 py-0.5 rounded ml-1
+        {% if k.tip == 'dobavljac' %}bg-orange-100 text-orange-600
+        {% elif k.tip == 'kupac' %}bg-blue-100 text-blue-600
+        {% elif k.tip == 'oba' %}bg-purple-100 text-purple-600
+        {% else %}bg-gray-100 text-gray-500{% endif %}">
+        {{ tip_label[k.tip] }}
+    </span>
+    {% endif %}
+</div>
+
+<form method="post" action="{% if k %}/kupci/{{ k.id }}{% else %}/kupci/novi{% endif %}">
+
+{# ─── Opći podaci ─────────────────────────────────────────────────────────── #}
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden mb-4">
+    <div class="bg-slate-700 px-4 py-2.5">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-white">Opći podaci</h2>
+    </div>
+    <div class="p-4 grid grid-cols-12 gap-3">
+        <div class="col-span-2">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Šifra</label>
+            <input type="text" name="sifra" value="{{ k.sifra if k else '' }}" placeholder="auto"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+        </div>
+        <div class="col-span-5">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Naziv *</label>
+            <input type="text" name="naziv" required value="{{ k.naziv if k else '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="col-span-3">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Interni naziv</label>
+            <input type="text" name="interni_naziv" value="{{ k.interni_naziv or '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="col-span-2">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Tip</label>
+            <select name="tip"
+                    class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                {% for t in tipovi %}
+                <option value="{{ t }}" {% if k and k.tip == t %}selected{% elif not k and t == 'dobavljac' %}selected{% endif %}>
+                    {{ tip_label[t] }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-span-5">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Dodatni naziv</label>
+            <input type="text" name="naziv_dodatni" value="{{ k.naziv_dodatni or '' if k else '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="col-span-4">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Grupa</label>
+            <input type="text" name="grupa" value="{{ k.grupa or '' if k else '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="col-span-3"></div>
+
+        <div class="col-span-3">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">OIB</label>
+            <input type="text" name="oib" value="{{ k.oib or '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+        </div>
+        <div class="col-span-3">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Matični broj</label>
+            <input type="text" name="maticni_broj" value="{{ k.maticni_broj or '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+        </div>
+        <div class="col-span-2">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Valuta plaćanja (dana)</label>
+            <input type="number" name="valuta_placanja_dan" min="0" value="{{ k.valuta_placanja_dan if (k and k.valuta_placanja_dan is not none) else '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="col-span-2">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Radno vrijeme</label>
+            <input type="text" name="radno_vrijeme" value="{{ k.radno_vrijeme or '' }}" placeholder="08:00-16:00"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="col-span-3">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">HBOR rok plaćanja (dana)</label>
+            <input type="number" name="hbor_rok_placanja_dan" min="0" value="{{ k.hbor_rok_placanja_dan if (k and k.hbor_rok_placanja_dan is not none) else '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="col-span-3 flex items-end pb-1.5">
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" name="hbor_osiguranje" {% if k and k.hbor_osiguranje %}checked{% endif %}
+                       class="w-4 h-4 rounded border-gray-400 text-blue-600 focus:ring-blue-500">
+                <span class="text-sm text-gray-700 font-semibold">HBOR osiguranje</span>
+            </label>
+        </div>
+        <div class="col-span-3 flex items-end pb-1.5">
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" name="aktivan" {% if not k or k.aktivan %}checked{% endif %}
+                       class="w-4 h-4 rounded border-gray-400 text-blue-600 focus:ring-blue-500">
+                <span class="text-sm text-gray-700 font-semibold">Aktivan</span>
+            </label>
+        </div>
+    </div>
+</div>
+
+{# ─── Adresa i kontakt ─────────────────────────────────────────────────────── #}
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden mb-4">
+    <div class="bg-slate-700 px-4 py-2.5">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-white">Adresa i kontakt</h2>
+    </div>
+    <div class="p-4 grid grid-cols-12 gap-3">
+        <div class="col-span-6">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Adresa</label>
+            <input type="text" name="adresa" value="{{ k.adresa or '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="col-span-2">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Poštanski broj</label>
+            <input type="text" name="postanski_broj" value="{{ k.postanski_broj or '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+        </div>
+        <div class="col-span-3">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Mjesto</label>
+            <input type="text" name="mjesto" value="{{ k.mjesto or '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="col-span-1">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Država</label>
+            <input type="text" name="drzava" value="{{ k.drzava or 'Hrvatska' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="col-span-3">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Telefon</label>
+            <input type="text" name="telefon" value="{{ k.telefon or '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="col-span-3">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Mobitel</label>
+            <input type="text" name="mobitel" value="{{ k.mobitel or '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="col-span-4">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Email</label>
+            <input type="email" name="email" value="{{ k.email or '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="col-span-2">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Web</label>
+            <input type="text" name="web" value="{{ k.web or '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="col-span-4">
+            <label class="block text-[10px] font-semibold text-gray-500 mb-0.5 uppercase">Referent / Kontakt osoba</label>
+            <input type="text" name="referent" value="{{ k.referent or '' }}"
+                   class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+    </div>
+</div>
+
+{# ─── Napomena ────────────────────────────────────────────────────────────── #}
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden mb-4">
+    <div class="bg-slate-700 px-4 py-2.5">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-white">Napomena</h2>
+    </div>
+    <div class="p-4">
+        <textarea name="napomena" rows="3"
+                  class="w-full border border-gray-400 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y">{{ k.napomena or '' }}</textarea>
+    </div>
+</div>
+
+{# ─── Akcije ──────────────────────────────────────────────────────────────── #}
+<div class="flex items-center justify-between">
+    <div class="flex gap-2">
+        <button type="submit"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded transition-colors">
+            Spremi
+        </button>
+        <a href="/kupci"
+           class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-semibold rounded transition-colors">
+            Odustani
+        </a>
+    </div>
+    {% if k %}
+    <button type="button"
+            hx-post="/kupci/{{ k.id }}/obrisi"
+            hx-confirm="Obrisati kontakt '{{ k.naziv }}'?"
+            class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold border border-red-200 rounded transition-colors">
+        Obriši kontakt
+    </button>
+    {% endif %}
+</div>
+
+</form>
+
+{# ─── Adresar (poslovne jedinice / adrese partnera) ──────────────────────── #}
+{% if k %}
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden mt-4">
+    <div class="bg-slate-700 px-4 py-2.5 flex items-center justify-between">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-white">Adresar — poslovne jedinice</h2>
+        {% if k.adrese %}<span class="text-xs font-mono text-slate-300">{{ k.adrese|length }} adresa</span>{% endif %}
+    </div>
+    {% include "kontakt/_adresar.html" %}
+</div>
+
+<div class="mt-4 text-[11px] text-gray-400">
+    Šifra: <span class="font-mono">{{ k.sifra }}</span>
+    &nbsp;·&nbsp; Kreirano: {{ k.created_at.strftime("%d.%m.%Y %H:%M") }}
+    &nbsp;·&nbsp; Izmijenjeno: {{ k.updated_at.strftime("%d.%m.%Y %H:%M") }}
+</div>
+{% endif %}
+{% endblock %}

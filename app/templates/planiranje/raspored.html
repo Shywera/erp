@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Raspored — {{ presa.sifra }}{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<style>
+    .sort-ghost td { background: #bfdbfe !important; }      /* placeholder (gdje će sjesti) */
+    .sort-ghost { opacity: .6; }
+    .sort-chosen td { background: #eff6ff; box-shadow: inset 0 0 0 9999px rgba(59,130,246,.06); }
+    #tablica tbody tr.drag, #tablica .drag { transition: background .15s; }
+</style>
+
+<div class="bg-amber-100 border border-amber-300 text-amber-800 text-sm rounded-lg px-4 py-2 mb-3">
+    ⚠ <strong>U IZRADI (WIP)</strong> — ovaj ERP raspored je nacrt; prava automatizacija radi se kao zaseban alat nad Excelom.
+</div>
+<div class="flex items-center gap-2 mb-3 text-sm">
+    <a href="/planiranje" class="text-slate-500 hover:text-slate-800">← Kalkulator</a>
+    <span class="text-gray-300">/</span>
+    <span class="font-semibold text-gray-700">Raspored tiska</span>
+</div>
+
+<div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+    <div class="flex items-center gap-1 flex-wrap">
+        {% for t in tabovi %}
+        <a href="/planiranje/raspored/{{ t.slug }}"
+           class="px-3 py-1.5 rounded text-sm font-semibold
+                  {% if t.slug == slug %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+            {{ t.sifra }}
+            <span class="text-[11px] font-normal {% if t.slug == slug %}text-blue-200{% else %}text-gray-400{% endif %}">
+                ({{ t.broj }} · {{ t.sati_min | fmtmin }})
+            </span>
+        </a>
+        {% endfor %}
+    </div>
+    <form method="post" action="/planiranje/uvoz"
+          onsubmit="return confirm('Uvezi Raspored strojevi TISAK.xls? Zamijenit će postojeće naloge sva 3 stroja.')">
+        <button class="px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold">⤓ Uvezi Excel</button>
+    </form>
+</div>
+
+<div id="tablica">
+    {% include "planiranje/_tablica.html" %}
+</div>
+
+{# ── Dodaj nalog ── #}
+<div x-data="{open:false}" class="bg-white rounded-lg border border-gray-300 shadow-sm mt-4">
+    <button @click="open=!open" class="w-full text-left px-4 py-3 font-semibold text-gray-700">+ Dodaj nalog na {{ presa.sifra }}</button>
+    <div x-show="open" x-cloak class="px-4 pb-4 border-t border-gray-100 pt-3">
+        <form hx-post="/planiranje/raspored/{{ slug }}/dodaj" hx-target="#tablica" hx-swap="innerHTML"
+              class="grid grid-cols-2 md:grid-cols-6 gap-3 text-sm" @htmx:after-request="open=false">
+            <input name="rn" placeholder="RN" class="border border-gray-400 rounded px-2 py-1.5">
+            <input name="papir_naziv" placeholder="Papir" class="border border-gray-400 rounded px-2 py-1.5 md:col-span-2">
+            <input name="format_cm" placeholder="Format cm" class="border border-gray-400 rounded px-2 py-1.5">
+            <input name="naklada" type="number" placeholder="Naklada" class="border border-gray-400 rounded px-2 py-1.5 font-mono">
+            <input name="kontakata" type="number" placeholder="Kontakata" class="border border-gray-400 rounded px-2 py-1.5 font-mono">
+            <input name="normativ" type="number" placeholder="Normativ ar/h" class="border border-gray-400 rounded px-2 py-1.5 font-mono">
+            <input name="broj_boja" type="number" placeholder="Boje" class="border border-gray-400 rounded px-2 py-1.5 font-mono">
+            <input name="priprema_min" type="number" value="45" placeholder="PRIP min" class="border border-gray-400 rounded px-2 py-1.5 font-mono">
+            <input name="pranje_min" type="number" value="15" placeholder="PRA min" class="border border-gray-400 rounded px-2 py-1.5 font-mono">
+            <input name="rok" placeholder="Rok" class="border border-gray-400 rounded px-2 py-1.5">
+            <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded px-4 py-1.5">Dodaj</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

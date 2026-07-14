@@ -1,0 +1,124 @@
+<div id="op-sekcija">
+
+    {% if operacije %}
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-gray-50 text-[11px] uppercase tracking-wide text-gray-500 border-b border-gray-200">
+                    <th class="px-3 py-2 text-center w-8">Rb.</th>
+                    <th class="px-3 py-2 text-left">Operacija</th>
+                    <th class="px-3 py-2 text-left">Stroj</th>
+                    <th class="px-3 py-2 text-center w-20">Alias</th>
+                    <th class="px-3 py-2 text-right w-24">Količina</th>
+                    <th class="px-3 py-2 text-center w-20">Norma</th>
+                    <th class="px-3 py-2 text-right w-20">EUR/h</th>
+                    <th class="px-3 py-2 text-right w-28">Ukupno EUR</th>
+                    <th class="px-3 py-2 w-10"></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for o in operacije %}
+            {% set uk = (o.eur_h * o.norma_min / 60) if (o.eur_h and o.norma_min) else o.ukupno_eur %}
+            <tr class="{% if loop.index0 % 2 == 0 %}bg-white{% else %}bg-gray-50{% endif %} border-b border-gray-100 hover:bg-blue-50 group">
+                <td class="px-3 py-1.5 text-center text-gray-400 text-xs">{{ loop.index }}</td>
+                <td class="px-3 py-1.5 text-gray-800">{{ o.naziv_operacije }}</td>
+                <td class="px-3 py-1.5 text-gray-600 text-xs">{{ o.stroj_naziv or "—" }}</td>
+                <td class="px-3 py-1.5 text-center font-mono text-xs text-gray-500">{{ o.stroj_alias or "—" }}</td>
+                <td class="px-3 py-1.5 text-right font-mono text-xs">{{ o.kolicina | fmtn if o.kolicina is not none else "—" }}</td>
+                <td class="px-3 py-1.5 text-center font-mono text-xs font-semibold">{{ o.norma_min | hhmm }}</td>
+                <td class="px-3 py-1.5 text-right font-mono text-xs">{{ o.eur_h | fmteur if o.eur_h is not none else "—" }}</td>
+                <td class="px-3 py-1.5 text-right font-mono text-xs font-semibold text-gray-700">{{ uk | fmteur if uk is not none else "—" }}</td>
+                <td class="px-3 py-1.5 text-center">
+                    <button type="button"
+                            hx-post="/tehnoloski-postupci/{{ n.id }}/operacije/{{ o.id }}/obrisi"
+                            hx-target="#op-sekcija"
+                            hx-swap="outerHTML"
+                            hx-confirm="Obrisati operaciju '{{ o.naziv_operacije }}'?"
+                            class="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 text-red-400 hover:text-red-600 border border-gray-300 rounded transition-all">
+                        ✕
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="bg-slate-50 border-t-2 border-slate-300 font-semibold text-sm">
+                    <td colspan="7" class="px-3 py-2 text-right text-gray-600">Ukupno operacije:</td>
+                    <td class="px-3 py-2 text-right font-mono text-slate-800">{{ zbroj.op_total | fmteur }} EUR</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% else %}
+    <p class="px-4 py-3 text-sm text-gray-400">Nema dodanih operacija.</p>
+    {% endif %}
+
+    {# Add row #}
+    <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+        <form hx-post="/tehnoloski-postupci/{{ n.id }}/operacije/dodaj"
+              hx-target="#op-sekcija"
+              hx-swap="outerHTML"
+              class="flex items-end gap-2 flex-wrap">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">Naziv operacije *</label>
+                <input type="text" name="naziv_operacije" required placeholder="npr. CX104 - priprema boja"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="w-36">
+                <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">Stroj</label>
+                <input type="text" name="stroj_naziv" placeholder="Heidelberg CX 104"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="w-24">
+                <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">Alias</label>
+                <input type="text" name="stroj_alias" placeholder="HD CX-104"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="w-24">
+                <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">Količina</label>
+                <input type="number" name="kolicina" min="0" placeholder="0"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="w-20">
+                <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">Norma (hh:mm)</label>
+                <input type="text" name="norma_min" placeholder="01:30"
+                       pattern="\d{1,3}:\d{2}"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="w-24">
+                <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">EUR/h</label>
+                <input type="number" name="eur_h" step="0.01" min="0"
+                       class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button type="submit"
+                    class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition-colors">
+                + Dodaj
+            </button>
+        </form>
+    </div>
+
+    {# ── Zbroj ──────────────────────────────────────────────────────────────── #}
+    {% if zbroj.grand > 0 %}
+    <div class="px-4 py-4 bg-slate-800 text-white">
+        <div class="grid grid-cols-3 gap-4 text-center">
+            <div>
+                <div class="text-[10px] uppercase tracking-widest text-slate-400 mb-0.5">Materijal</div>
+                <div class="text-lg font-bold font-mono">{{ zbroj.mat_total | fmteur }} EUR</div>
+            </div>
+            <div>
+                <div class="text-[10px] uppercase tracking-widest text-slate-400 mb-0.5">Operacije</div>
+                <div class="text-lg font-bold font-mono">{{ zbroj.op_total | fmteur }} EUR</div>
+            </div>
+            <div>
+                <div class="text-[10px] uppercase tracking-widest text-slate-400 mb-0.5">Ukupno</div>
+                <div class="text-xl font-bold font-mono text-green-400">{{ zbroj.grand | fmteur }} EUR</div>
+                {% if zbroj.per_1000 is not none %}
+                <div class="text-xs text-slate-400 mt-0.5">{{ zbroj.per_1000 | fmteur }} EUR / 1000 kom</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>

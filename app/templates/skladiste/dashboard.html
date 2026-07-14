@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Skladište — WMS{% endblock %}
+
+{% block content %}
+<div class="bg-amber-100 border border-amber-300 text-amber-800 text-sm rounded-lg px-4 py-2.5 mb-4">
+    ℹ <strong>Prebačeno u zaseban vanjski WMS modul</strong> — ovaj WMS unutar ERP-a <strong>radi, ali se ne koristi</strong>.
+    Koristi se samostalni <span class="font-mono">WMS-app</span> (vlastiti server/baza). Ostaje ovdje kao referenca.
+</div>
+<div class="flex items-center justify-between mb-4">
+    <div>
+        <h1 class="text-xl font-bold text-gray-800">Skladište — WMS</h1>
+        <p class="text-sm text-gray-500 mt-0.5">Upravljanje paletama · {{ ukupno | fmtn }} mjesta · 20 regala (zone A–D)</p>
+    </div>
+</div>
+
+{# ── Metrike ─────────────────────────────────────────────────────────────── #}
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+    <div class="bg-white rounded-lg border border-gray-300 shadow-md p-4">
+        <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Zauzeto</div>
+        <div class="text-3xl font-bold font-mono text-blue-700 mt-1">{{ zauzeto | fmtn }}</div>
+        <div class="text-xs text-gray-400 mt-0.5">{{ postotak_ukupno }}% kapaciteta</div>
+    </div>
+    <div class="bg-white rounded-lg border border-gray-300 shadow-md p-4">
+        <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Slobodno</div>
+        <div class="text-3xl font-bold font-mono text-green-700 mt-1">{{ slobodno | fmtn }}</div>
+        <div class="text-xs text-gray-400 mt-0.5">mjesta dostupno</div>
+    </div>
+    <div class="bg-white rounded-lg border border-gray-300 shadow-md p-4">
+        <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Ukupno mjesta</div>
+        <div class="text-3xl font-bold font-mono text-slate-700 mt-1">{{ ukupno | fmtn }}</div>
+        <div class="text-xs text-gray-400 mt-0.5">fiksni raspored</div>
+    </div>
+    <div class="bg-white rounded-lg border border-gray-300 shadow-md p-4">
+        <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Ističe za 30 dana</div>
+        <div class="text-3xl font-bold font-mono {% if istice > 0 %}text-amber-600{% else %}text-gray-400{% endif %} mt-1">{{ istice | fmtn }}</div>
+        <div class="text-xs text-gray-400 mt-0.5">paleta po roku</div>
+    </div>
+</div>
+
+{# ── Popunjenost po zonama ───────────────────────────────────────────────── #}
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden mb-5">
+    <div class="bg-slate-700 px-4 py-2.5">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-white">Popunjenost po zonama</h2>
+    </div>
+    <div class="p-4 space-y-3">
+        {% for z in zone %}
+        <div>
+            <div class="flex items-center justify-between text-sm mb-1">
+                <span class="font-semibold text-gray-700">Zona {{ z.zona }}</span>
+                <span class="font-mono text-xs text-gray-500">{{ z.zauzeto | fmtn }} / {{ z.kapacitet | fmtn }} · {{ z.postotak }}%</span>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                <div class="h-2.5 rounded-full transition-all
+                            {% if z.postotak >= 90 %}bg-red-500{% elif z.postotak >= 70 %}bg-amber-500{% else %}bg-blue-500{% endif %}"
+                     style="width: {{ z.postotak }}%"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{# ── Funkcije (sljedeće faze) ────────────────────────────────────────────── #}
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden">
+    <div class="bg-slate-700 px-4 py-2.5">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-white">Funkcije</h2>
+    </div>
+    <div class="p-4 grid grid-cols-2 md:grid-cols-3 gap-3">
+        {% for ime, href, ikona in [
+            ("Zaprimanje", "/skladiste/zaprimanje", "⬇"),
+            ("Izdavanje (FIFO)", "/skladiste/izdaj", "⬆"),
+            ("Inventura", "/skladiste/inventura", "▦"),
+            ("Karta skladišta", "/skladiste/mapa", "▦"),
+            ("Sve palete", "/skladiste/palete", "≣"),
+            ("Prioriteti", "/skladiste/prioriteti", "★"),
+        ] %}
+        <a href="{{ href }}"
+           class="border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 rounded-lg p-4 text-center transition-colors">
+            <div class="text-2xl leading-none mb-1">{{ ikona }}</div>
+            <div class="text-sm font-bold text-blue-800">{{ ime }}</div>
+        </a>
+        {% endfor %}
+        {% for f in ["Naljepnice"] %}
+        <div class="border border-dashed border-gray-300 rounded-lg p-4 text-center text-sm text-gray-400 bg-gray-50">
+            {{ f }}
+            <div class="text-[10px] uppercase tracking-wide mt-1 text-amber-600 font-semibold">uskoro</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Montaža etiketa{% endblock %}
+
+{% block content %}
+<div class="flex gap-5 items-start">
+
+    {# ── Lijevo: unos ─────────────────────────────────────────────────────── #}
+    <div class="w-72 flex-shrink-0">
+        <div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden sticky top-6 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            <div class="bg-slate-700 px-4 py-2.5">
+                <h2 class="text-xs font-bold uppercase tracking-widest text-white">Postavke</h2>
+            </div>
+            <form id="montaza-form"
+                  hx-post="/normativi/montaza/izracunaj"
+                  hx-target="#montaza-rezultati"
+                  hx-swap="innerHTML"
+                  hx-indicator="#spinner"
+                  class="p-3 space-y-4 text-sm">
+
+                {# Tip papira + broj etiketa #}
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-500 mb-0.5">Tip papira</label>
+                    <select name="tip_papira" id="tip_papira"
+                            class="w-full border border-gray-400 bg-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        {% for tip in tipovi %}
+                        <option value="{{ tip }}" {% if p.tip_papira == tip %}selected{% endif %}>{{ tip }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <div class="text-[11px] font-semibold text-gray-500 mb-1">Broj etiketa u kompletu</div>
+                    <div class="flex gap-2">
+                        {% for n in [1, 2, 3] %}
+                        <label class="flex-1 text-center border rounded py-1 cursor-pointer text-sm font-semibold transition-colors
+                                      {% if p.broj_etiketa == n %}border-blue-600 bg-blue-50 text-blue-700{% else %}border-gray-300 text-gray-600 hover:border-gray-400{% endif %}">
+                            <input type="radio" name="broj_etiketa" value="{{ n }}"
+                                   {% if p.broj_etiketa == n %}checked{% endif %}
+                                   class="sr-only"
+                                   onchange="this.form.querySelectorAll('[data-n]').forEach(el=>{ const v=parseInt(el.dataset.n); el.disabled=v>parseInt(this.value); if(v>parseInt(this.value)){['v_b','s_b','v_c','s_c'].filter((_,i)=>v===2+Math.floor(i/2)).forEach(k=>{const inp=this.form.querySelector('[name='+k+']'); if(inp)inp.value=0;}) } }); this.closest('div').querySelectorAll('label').forEach((l,i)=>{ l.className=l.className.replace(/border-blue-600 bg-blue-50 text-blue-700|border-gray-300 text-gray-600 hover:border-gray-400/g,''); l.classList.add(i==(parseInt(this.value)-1)?'border-blue-600':'border-gray-300'); l.classList.add(i==(parseInt(this.value)-1)?'bg-blue-50':''); l.classList.add(i==(parseInt(this.value)-1)?'text-blue-700':'text-gray-600'); })">
+                            {{ n }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-3">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Etiketa A</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-500 mb-0.5">Visina A (mm)</label>
+                            <input type="number" name="v_a" value="{{ p.v_a }}" min="0"
+                                   class="w-full border border-gray-400 bg-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-500 mb-0.5">Širina A (mm)</label>
+                            <input type="number" name="s_a" value="{{ p.s_a }}" min="0"
+                                   class="w-full border border-gray-400 bg-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-3" data-n="2" id="grp_b">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Etiketa B</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-500 mb-0.5">Visina B (mm)</label>
+                            <input type="number" name="v_b" value="{{ p.v_b }}" min="0"
+                                   {% if p.broj_etiketa < 2 %}disabled{% endif %}
+                                   class="w-full border border-gray-400 bg-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-500 mb-0.5">Širina B (mm)</label>
+                            <input type="number" name="s_b" value="{{ p.s_b }}" min="0"
+                                   {% if p.broj_etiketa < 2 %}disabled{% endif %}
+                                   class="w-full border border-gray-400 bg-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-3" data-n="3" id="grp_c">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Etiketa C</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-500 mb-0.5">Visina C (mm)</label>
+                            <input type="number" name="v_c" value="{{ p.v_c }}" min="0"
+                                   {% if p.broj_etiketa < 3 %}disabled{% endif %}
+                                   class="w-full border border-gray-400 bg-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-500 mb-0.5">Širina C (mm)</label>
+                            <input type="number" name="s_c" value="{{ p.s_c }}" min="0"
+                                   {% if p.broj_etiketa < 3 %}disabled{% endif %}
+                                   class="w-full border border-gray-400 bg-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-3">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Napusti (mm)</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        {% for name, label, val in [('mg','Gore',p.mg),('md','Dolje',p.md),('ml','Lijevo',p.ml),('mdes','Desno',p.mdes)] %}
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-500 mb-0.5">{{ label }}</label>
+                            <input type="number" name="{{ name }}" value="{{ val }}" min="0"
+                                   class="w-full border border-gray-400 bg-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-2">
+                        <label class="block text-[11px] font-semibold text-gray-500 mb-0.5">Odmak bez napusta (mm)</label>
+                        <input type="number" name="odmak" value="{{ p.odmak }}" min="0"
+                               class="w-full border border-gray-400 bg-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-3">
+                    <label class="block text-[11px] font-semibold text-gray-500 mb-1">
+                        Težina skarta (k = {{ p.k_ocjena }})
+                    </label>
+                    <input type="range" name="k_ocjena" min="0" max="1" step="0.05"
+                           value="{{ p.k_ocjena }}"
+                           oninput="this.previousElementSibling.textContent='Težina skarta (k = '+this.value+')'"
+                           class="w-full">
+                    <div class="flex justify-between text-[10px] text-gray-400 mt-0.5">
+                        <span>0 = samo broj</span><span>1 = kažnjava škart</span>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-3">
+                    <button type="submit"
+                            class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded transition-colors">
+                        Izračunaj
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    {# ── Desno: rezultati ─────────────────────────────────────────────────── #}
+    <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between mb-4">
+            <h1 class="text-xl font-bold text-gray-800">
+                Montaža etiketa
+                <span id="spinner" class="htmx-indicator ml-2 text-sm font-normal text-blue-500">↻ računam...</span>
+            </h1>
+        </div>
+
+        <div id="montaza-rezultati">
+            <div class="bg-white rounded-lg border border-gray-300 p-8 text-center text-gray-400 text-sm">
+                Unesite dimenzije etiketa i kliknite <strong>Izračunaj</strong>.
+            </div>
+        </div>
+
+        {# ── Baza papira ──────────────────────────────────────────────────── #}
+        <div class="mt-8">
+            <div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden">
+                <div class="bg-slate-700 px-4 py-2.5 flex justify-between items-center">
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-white">Aktivni formati papira</h2>
+                    <form method="post" action="/normativi/montaza/papiri/reset"
+                          hx-post="/normativi/montaza/papiri/reset"
+                          hx-target="#papiri-lista"
+                          hx-swap="outerHTML"
+                          onsubmit="return confirm('Resetirati bazu papira na zadane formate?')">
+                        <button type="submit"
+                                class="text-[10px] font-semibold text-slate-400 hover:text-white border border-slate-600 hover:border-slate-400 px-2 py-1 rounded transition-colors">
+                            ↩ Reset
+                        </button>
+                    </form>
+                </div>
+                <div class="p-4">
+                    <div id="papiri-lista"
+                         hx-get="/normativi/montaza/papiri"
+                         hx-trigger="load"
+                         hx-swap="outerHTML">
+                        <div class="text-sm text-gray-400">Učitavam formate...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// Ažurira disabled stanje na B/C grupama pri promjeni radio gumba
+document.addEventListener('change', function(e) {
+    if (e.target.name === 'broj_etiketa') {
+        const n = parseInt(e.target.value);
+        const form = e.target.form;
+        ['v_b','s_b'].forEach(k => {
+            const el = form.querySelector('[name='+k+']');
+            if (el) { el.disabled = n < 2; if (n < 2) el.value = 0; }
+        });
+        ['v_c','s_c'].forEach(k => {
+            const el = form.querySelector('[name='+k+']');
+            if (el) { el.disabled = n < 3; if (n < 3) el.value = 0; }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+# Secrets - never commit credentials
+Pauk acc.txt
+*.env
+.env
+*credentials*
+*acc.txt
+
+# Stvarni podaci tvrtke (Excel exporti) - NIKAD u repo
+Resources/
+
+# Scratch / exploration artifacts (samo root, NE app/templates!)
+/arhitektura-report.html
+/boot_check.txt
+/boot_out.txt
+cookies.txt
+*.tmp
+
+# Generirana dokumentacija (izvori .py ostaju)
+Dokumentacija-HR/*.pdf
+Dokumentacija-HR/*.docx
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Databases (runtime data, not source)
+*.db
+*.sqlite3
+
+# run-erp-mes-wms driver artifacts
+driver_screenshot.png
+driver_*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Editor
+.vscode/
+.idea/

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ERP{% endblock %} — ERP/MES/WMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script defer src="https://unpkg.com/alpinejs@3/dist/cdn.min.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 flex min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="w-60 bg-slate-900 text-slate-200 flex flex-col flex-shrink-0 sticky top-0 max-h-screen overflow-y-auto">
+        <div class="px-4 py-4 border-b border-slate-700">
+            <div class="text-white font-bold text-sm tracking-wider">STONOGA</div>
+        </div>
+
+        <nav class="flex-1 py-2 flex flex-col">
+            {% macro navlink(href, label, wip=false) %}
+            {% set is_active = request.url.path == href or request.url.path.startswith(href + '/') %}
+            <a href="{{ href }}"
+               class="flex items-start justify-between mx-2 px-3 py-1.5 rounded text-[13px] leading-snug transition-colors
+                      {% if is_active %}bg-blue-600 text-white font-semibold{% else %}text-slate-300 hover:bg-slate-700 hover:text-white{% endif %}">
+                <span>{{ label }}</span>
+                {% if wip and not is_active %}
+                <span class="text-[9px] bg-slate-600 text-slate-400 px-1 py-0.5 rounded font-medium leading-none shrink-0 mt-0.5 ml-1">•</span>
+                {% endif %}
+            </a>
+            {% endmacro %}
+
+            {% macro group(label) %}
+            <p class="px-4 pt-3 pb-1 text-[9px] uppercase tracking-widest text-slate-500 font-bold">{{ label }}</p>
+            {% endmacro %}
+
+            {{ group('Matični podaci') }}
+            {{ navlink('/materijali',         'Materijali') }}
+            {{ navlink('/pantoni',            'Pantoni') }}
+            {{ navlink('/strojevi',           'Strojevi') }}
+            {{ navlink('/kupci',              'Kupci / Dobavljači') }}
+
+            {{ navlink('/reklamacije',        'Reklamacije / QMS') }}
+
+            {{ group('Normativi') }}
+            {{ navlink('/normativi/kalkulator', 'Kalkulator') }}
+            {{ navlink('/normativi/montaza',    'Montaža etiketa') }}
+            {{ navlink('/tehnoloski-postupci','Tehnoloski postupci') }}
+
+            {{ group('Planiranje') }}
+            {{ navlink('/planiranje-nabave',  'Planiranje nabave iz proiz.', wip=true) }}
+            {{ navlink('/planiranje',         'Planiranje tiska') }}
+
+            {{ group('Prodaja') }}
+            {{ navlink('/kalkulacije',        'Upiti / Kalkulacije',   wip=true) }}
+            {{ navlink('/ponude',             'Ponude',                wip=true) }}
+            {{ navlink('/narudzbe',           'Narudžbe',              wip=true) }}
+            {{ navlink('/analiza-prodaje',    'Analiza prodaje',       wip=true) }}
+            {{ navlink('/knjiga-izvoza',      'Knjiga izvoza',         wip=true) }}
+
+            {{ group('Nabava') }}
+            {{ navlink('/primke',             'Primke i međuskl.',     wip=true) }}
+            {{ navlink('/ulazni-racuni',      'Ulazni računi',         wip=true) }}
+            {{ navlink('/analiza-nabave',     'Analiza nabave',        wip=true) }}
+            {{ navlink('/knjiga-uvoza',       'Knjiga uvoza',          wip=true) }}
+
+            {{ group('Financije') }}
+            {{ navlink('/otpremnice',         'Otpremnice',            wip=true) }}
+            {{ navlink('/izlazni-racuni',     'Izlazni računi',        wip=true) }}
+            {{ navlink('/racuni',             'Računi',                wip=true) }}
+            {{ navlink('/proforma',           'Proforma',              wip=true) }}
+
+            {{ group('Skladište') }}
+            {{ navlink('/skladiste',          'Skladište WMS 🔒') }}
+            {{ navlink('/inventura',          'Inventura',             wip=true) }}
+            {{ navlink('/tjedne-usklade',     'Tjedne usklade',        wip=true) }}
+
+            {{ group('Proizvodnja / MES') }}
+            {{ navlink('/radni-nalozi',       'Radni nalozi',          wip=true) }}
+            {{ navlink('/dnevnici-rada',      'Dnevnici rada',         wip=true) }}
+            {{ navlink('/efikasnost',         'Efikasnost radnika',    wip=true) }}
+            {{ navlink('/odrzavanje',         'Održavanje',            wip=true) }}
+        </nav>
+
+        <div class="px-4 py-3 border-t border-slate-700 text-[10px] text-slate-500">v0.1-dev · SQLite</div>
+    </aside>
+
+    <!-- Content -->
+    <main class="flex-1 overflow-x-hidden p-6 min-w-0">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

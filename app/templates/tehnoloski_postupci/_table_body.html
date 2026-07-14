@@ -1,0 +1,40 @@
+{% if not normatives %}
+<tr>
+    <td colspan="9" class="px-3 py-8 text-center text-gray-400 text-sm">
+        {% if q %}Nema rezultata za <em>{{ q }}</em>.{% else %}Nema unesenih normativa.{% endif %}
+    </td>
+</tr>
+{% endif %}
+{% for n in normatives %}
+<tr class="{% if loop.index0 % 2 == 0 %}bg-white{% else %}bg-gray-50{% endif %} hover:bg-blue-50 border-b border-gray-100 group">
+    <td class="px-3 py-2 text-gray-400 text-xs">{{ n.id }}</td>
+    <td class="px-3 py-2">
+        <a href="/tehnoloski-postupci/{{ n.id }}"
+           class="font-semibold text-blue-700 hover:underline">{{ n.naziv }}</a>
+    </td>
+    <td class="px-3 py-2 font-mono text-xs text-gray-500">{{ n.sifra or "—" }}</td>
+    <td class="px-3 py-2 text-gray-600 text-xs">{{ n.kupac or "—" }}</td>
+    <td class="px-3 py-2 text-center text-gray-500 text-xs font-mono">
+        {% if n.arka_x and n.arka_y %}{{ n.arka_x | int }}×{{ n.arka_y | int }}{% else %}—{% endif %}
+    </td>
+    <td class="px-3 py-2 text-center text-gray-500 text-xs font-mono">
+        {% if n.et_xn and n.et_yn %}{{ n.et_xn | int }}×{{ n.et_yn | int }}{% else %}—{% endif %}
+    </td>
+    <td class="px-3 py-2 text-right text-gray-600 text-xs">
+        {% if n.serija %}{{ n.serija | fmtn }}{% if n.koeficijent %} × {{ n.koeficijent | fmtn }}{% endif %}{% else %}—{% endif %}
+    </td>
+    <td class="px-3 py-2 text-center text-gray-400 text-xs">{{ n.updated_at.strftime('%d.%m.%Y') }}</td>
+    <td class="px-3 py-2 text-center">
+        <div class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <a href="/tehnoloski-postupci/{{ n.id }}"
+               class="text-xs px-2 py-0.5 text-slate-500 hover:text-blue-600 border border-gray-300 rounded">✏</a>
+            <button type="button"
+                    hx-post="/tehnoloski-postupci/{{ n.id }}/obrisi"
+                    hx-confirm="Obrisati normativ '{{ n.naziv }}'?"
+                    hx-target="closest tr"
+                    hx-swap="outerHTML"
+                    class="text-xs px-2 py-0.5 text-slate-500 hover:text-red-600 border border-gray-300 rounded">🗑</button>
+        </div>
+    </td>
+</tr>
+{% endfor %}

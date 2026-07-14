@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+{% block title %}{% if m %}{{ m.sifra }}{% else %}Novi materijal{% endif %}{% endblock %}
+
+{# ── Macros ────────────────────────────────────────────────────────────── #}
+
+{% macro field(name, label, value=none, extra_class='') %}
+<div class="{{ extra_class }}">
+    <label class="block text-xs font-semibold text-gray-600 mb-1">{{ label }}</label>
+    <input name="{{ name }}" value="{{ value or '' }}"
+           class="w-full border border-gray-400 bg-white rounded px-2.5 py-1.5 text-sm text-gray-900
+                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+</div>
+{% endmacro %}
+
+{% macro numfield(name, label, value=none, step='0.001', extra_class='') %}
+<div class="{{ extra_class }}">
+    <label class="block text-xs font-semibold text-gray-600 mb-1">{{ label }}</label>
+    <input name="{{ name }}" type="number" step="{{ step }}" value="{{ value if value is not none else '' }}"
+           class="w-full border border-gray-400 bg-white rounded px-2.5 py-1.5 text-sm text-right text-gray-900
+                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+</div>
+{% endmacro %}
+
+{% macro card(title) %}
+<div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden">
+    <div class="bg-slate-700 px-4 py-2.5">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-white">{{ title }}</h2>
+    </div>
+    <div class="p-4">
+        {{ caller() }}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro ta(name, label, value='', rows=3, mono=false) %}
+<div>
+    <label class="block text-xs font-semibold text-gray-600 mb-1">{{ label }}</label>
+    <textarea name="{{ name }}" rows="{{ rows }}"
+              class="w-full border border-gray-400 bg-white rounded px-2.5 py-1.5 text-sm text-gray-900
+                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                     {% if mono %}font-mono text-xs{% endif %}">{{ value }}</textarea>
+</div>
+{% endmacro %}
+
+{% macro chk(name, label, checked=false) %}
+<label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+    <input type="checkbox" name="{{ name }}" class="w-4 h-4 rounded accent-blue-600"
+           {% if checked %}checked{% endif %}>
+    {{ label }}
+</label>
+{% endmacro %}
+
+{# ── Page ─────────────────────────────────────────────────────────────── #}
+
+{% block content %}
+<div class="flex justify-between items-start mb-5">
+    <div>
+        <h1 class="text-xl font-bold text-gray-900">
+            {% if m %}{{ m.sifra }} &mdash; {{ m.naziv }}{% else %}Novi materijal{% endif %}
+        </h1>
+        {% if m %}
+        <p class="text-sm text-gray-500 mt-0.5">
+            {{ m.kategorija or '' }}{% if m.tip %} / {{ m.tip }}{% endif %}{% if m.grupa %} / {{ m.grupa }}{% endif %}
+        </p>
+        {% endif %}
+    </div>
+    <a href="/materijali" class="text-sm text-blue-600 font-medium hover:underline mt-1">&larr; Povratak</a>
+</div>
+
+<form method="post" action="{% if m %}/materijali/{{ m.id }}{% else %}/materijali/novi{% endif %}" class="space-y-4">
+
+    {% call card('Osnovni podaci') %}
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+        {{ field('sifra', 'Sifra *', m.sifra if m else '') }}
+        <div class="md:col-span-2">{{ field('naziv', 'Naziv *', m.naziv if m else '') }}</div>
+        {{ field('jedinica', 'Jedinica *', m.jedinica if m else '') }}
+        {{ field('sipo_sifra', 'Sipo sifra', m.sipo_sifra if m else '') }}
+        <div class="flex items-end pb-1.5">
+            {{ chk('aktivno', 'Aktivno', not m or m.aktivno) }}
+        </div>
+    </div>
+    {% endcall %}
+
+    {% call card('Klasifikacija') %}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {{ field('kategorija', 'Kategorija', m.kategorija if m else '') }}
+        {{ field('tip', 'Tip', m.tip if m else '') }}
+        {{ field('grupa', 'Grupa', m.grupa if m else '') }}
+        {{ field('podgrupa', 'Podgrupa 1', m.podgrupa if m else '') }}
+        {{ field('podgrupa2', 'Podgrupa 2', m.podgrupa2 if m else '') }}
+        {{ field('podgrupa3', 'Podgrupa 3', m.podgrupa3 if m else '') }}
+        {{ field('podgrupa4', 'Podgrupa 4', m.podgrupa4 if m else '') }}
+    </div>
+    {% endcall %}
+
+    {% call card('Dimenzije i tehnicka svojstva') %}
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+        {{ numfield('promjer_mm',      'Promjer [mm]',      m.promjer_mm if m else none) }}
+        {{ numfield('debljina_um',     'Debljina [um]',     m.debljina_um if m else none) }}
+        {{ numfield('duljina_mm',      'Duljina [mm]',      m.duljina_mm if m else none,      step='0.01') }}
+        {{ numfield('sirina_mm',       'Sirina [mm]',       m.sirina_mm if m else none,       step='0.01') }}
+        {{ numfield('visina_mm',       'Visina [mm]',       m.visina_mm if m else none,       step='0.01') }}
+        {{ numfield('gramatura_g_m2',  'Gramatura [g/m²]',  m.gramatura_g_m2 if m else none,  step='0.01') }}
+        {{ numfield('povrsina_mm2',    'Povrsina [mm²]',    m.povrsina_mm2 if m else none,    step='0.01') }}
+        {{ numfield('volumen_mm3',     'Volumen [mm³]',     m.volumen_mm3 if m else none,     step='0.01') }}
+        {{ numfield('tezina_kg',       'Tezina [kg]',       m.tezina_kg if m else none) }}
+        {{ numfield('litraza',         'Litraza',           m.litraza if m else none) }}
+        {{ numfield('kutija_na_paleti_z', 'Kutija/paleta Z', m.kutija_na_paleti_z if m else none, step='0.01') }}
+        {{ field('kvaliteta', 'Kvaliteta', m.kvaliteta if m else '') }}
+        {{ field('hilzna',    'Hilzna',    m.hilzna if m else '') }}
+    </div>
+    {% endcall %}
+
+    {% call card('Proizvodnja, tisak i boja') %}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {{ field('tehnika',        'Tehnika',               m.tehnika if m else '') }}
+        {{ field('tip_dorade',     'Tip dorade',            m.tip_dorade if m else '') }}
+        {{ field('komplet',        'Komplet',               m.komplet if m else '') }}
+        {{ field('nacrt',          'Nacrt',                 m.nacrt if m else '') }}
+        {{ field('sistem',         'Sistem',                m.sistem if m else '') }}
+        {{ field('namotaj',        'Namotaj',               m.namotaj if m else '') }}
+        {{ field('podloga',        'Podloga',               m.podloga if m else '') }}
+        {{ field('bazni_papir',    'Bazni papir',           m.bazni_papir if m else '') }}
+        {{ field('materijal_tisak','Materijal (tisak)',     m.materijal_tisak if m else '') }}
+        {{ field('boja',           'Boja',                  m.boja if m else '') }}
+        <input type="hidden" name="pantone_id" value="{{ m.pantone_id or '' if m else '' }}">
+        {{ field('lugootporno',    'Lugootporno',           m.lugootporno if m else '') }}
+        {{ field('prehrana',       'Prehrana',              m.prehrana if m else '') }}
+        {{ field('jednokomp_dvokomp', 'Jednokomp./dvokomp.', m.jednokomp_dvokomp if m else '') }}
+        {{ field('svjetlostabilnost', 'Svjetlostabilnost',  m.svjetlostabilnost if m else '') }}
+        <div class="md:col-span-2">{{ field('certifikati', 'Certifikati', m.certifikati if m else '') }}</div>
+        <div class="flex items-end gap-6 pb-1">
+            {{ chk('coated', 'Coated', m.coated if m else false) }}
+            {{ chk('folija', 'Folija',  m.folija  if m else false) }}
+        </div>
+    </div>
+    {% endcall %}
+
+    {% call card('Dodatni opisi') %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+        {{ field('tehnicki_naziv', 'Tehnicki naziv robe', m.tehnicki_naziv if m else '') }}
+        {{ field('raspored',       'Raspored',            m.raspored if m else '') }}
+        {{ field('oznaka',         'Oznaka',              m.oznaka if m else '') }}
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {{ ta('opis_en',          'Opis (engleski)',   m.opis_en or '' if m else '') }}
+        {{ ta('posebna_napomena', 'Posebna napomena',  m.posebna_napomena or '' if m else '') }}
+        {{ ta('napomena_dorada',  'Napomena (dorada)', m.napomena_dorada or '' if m else '') }}
+    </div>
+    {% endcall %}
+
+    {% call card('Ostalo') %}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
+        {{ field('inventarni_broj',    'Inventarni broj',    m.inventarni_broj if m else '') }}
+        {{ field('ura',                'Ura',                m.ura if m else '') }}
+        {{ field('proizvodni_broj',    'Serijski broj',      m.proizvodni_broj if m else '') }}
+        {{ field('kljucni_broj_otpada','Kljucni br. otpada', m.kljucni_broj_otpada if m else '') }}
+        <div class="flex gap-5 pb-1">
+            {{ chk('qr_nije_potreban',       'Bez QR koda',        m.qr_nije_potreban if m else false) }}
+            {{ chk('zabranjeno_medjuskladiste', 'Zabr. medjuskl.', m.zabranjeno_medjuskladiste if m else false) }}
+        </div>
+    </div>
+    {% endcall %}
+
+    {% call card('Kolicine i nabava') %}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {{ numfield('minimalna_kolicina',  'Minimalna kolicina',     m.minimalna_kolicina if m else none) }}
+        {{ numfield('minimalno_pakiranje', 'Minimalno pakiranje',    m.minimalno_pakiranje if m else none) }}
+        {# ── Dobavljač autocomplete ─────────────────────────────────────── #}
+        <div class="md:col-span-2" x-data="{open: false}">
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Dobavljač</label>
+            <div class="relative">
+                <input type="text" name="q" id="dobavljac_txt"
+                       value="{{ m.dobavljac_naziv or '' if m else '' }}"
+                       placeholder="Pretraži po nazivu ili šifri..."
+                       autocomplete="off"
+                       hx-get="/kupci/autocomplete?tip=dobavljac"
+                       hx-trigger="input changed delay:300ms"
+                       hx-target="#dobavljac_results"
+                       @focus="open=true"
+                       @click.outside="open=false"
+                       class="w-full border border-gray-400 bg-white rounded px-2.5 py-1.5 text-sm text-gray-900
+                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <input type="hidden" name="dobavljac_id"    id="dobavljac_id"    value="{{ m.dobavljac_id or '' if m else '' }}">
+                <input type="hidden" name="dobavljac_naziv" id="dobavljac_naziv" value="{{ m.dobavljac_naziv or '' if m else '' }}">
+                <div id="dobavljac_results" x-show="open" class="relative z-50"></div>
+            </div>
+        </div>
+        {{ field('tarifni_broj',           'Tarifni broj',           m.tarifni_broj if m else '') }}
+        {{ field('zemlja_porijekla',       'Zemlja porijekla',       m.zemlja_porijekla if m else '') }}
+        {{ field('rok_trajanja',           'Rok trajanja',           m.rok_trajanja if m else '') }}
+        {{ numfield('rok_trajanja_godina', 'Rok trajanja (god.)',    m.rok_trajanja_godina if m else none, step='0.01') }}
+        {{ numfield('rok_dobavljivosti',   'Rok dobavljivosti (d.)', m.rok_dobavljivosti if m else none, step='1') }}
+    </div>
+    {% endcall %}
+
+    {% call card('Skladiste') %}
+    <p class="text-xs text-gray-500 mb-3">Podatke koristi / azurira WMS modul.</p>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {{ field('lokacija_skladiste',    'Lokacija',         m.lokacija_skladiste if m else '') }}
+        {{ field('pozicija',              'Pozicija',         m.pozicija if m else '') }}
+        {{ field('ulazno_skladiste_1',    'Ulazno skl. 1',    m.ulazno_skladiste_1 if m else '') }}
+        {{ field('ulazno_skladiste_2',    'Ulazno skl. 2',    m.ulazno_skladiste_2 if m else '') }}
+        {{ field('prijelazno_skladiste_1','Prijelazno 1',     m.prijelazno_skladiste_1 if m else '') }}
+        {{ field('prijelazno_skladiste_2','Prijelazno 2',     m.prijelazno_skladiste_2 if m else '') }}
+        {{ field('prijelazno_skladiste_3','Prijelazno 3',     m.prijelazno_skladiste_3 if m else '') }}
+    </div>
+    {% endcall %}
+
+    {% call card('Mjesta troska (strojevi)') %}
+    <p class="text-xs text-gray-500 mb-3">Podatke koristi / azurira Strojevi modul.</p>
+    <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
+        {{ field('mjesto_troska_1','MT 1', m.mjesto_troska_1 if m else '') }}
+        {{ field('mjesto_troska_2','MT 2', m.mjesto_troska_2 if m else '') }}
+        {{ field('mjesto_troska_3','MT 3', m.mjesto_troska_3 if m else '') }}
+        {{ field('mjesto_troska_4','MT 4', m.mjesto_troska_4 if m else '') }}
+        {{ field('mjesto_troska_5','MT 5', m.mjesto_troska_5 if m else '') }}
+        {{ field('mjesto_troska_6','MT 6', m.mjesto_troska_6 if m else '') }}
+        {{ field('mjesto_troska_7','MT 7', m.mjesto_troska_7 if m else '') }}
+        {{ field('mjesto_troska_8','MT 8', m.mjesto_troska_8 if m else '') }}
+        {{ field('mjesto_troska_9','MT 9', m.mjesto_troska_9 if m else '') }}
+    </div>
+    {% endcall %}
+
+    {% call card('Napomena i privici') %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {{ ta('napomena', 'Napomena', m.napomena or '' if m else '', rows=4) }}
+        {{ ta('datoteke', 'Datoteke (iz legacy ERP)', m.datoteke or '' if m else '', rows=4, mono=true) }}
+    </div>
+    {% endcall %}
+
+    <div class="flex gap-3 pt-2">
+        <button type="submit"
+                class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-semibold
+                       hover:bg-blue-700 transition-colors shadow">
+            Spremi
+        </button>
+        <a href="/materijali"
+           class="bg-white border border-gray-400 text-gray-700 px-6 py-2 rounded-lg text-sm font-semibold
+                  hover:bg-gray-100 transition-colors">
+            Odustani
+        </a>
+    </div>
+</form>
+
+<script>
+function kontaktSelect(id, naziv, sifra) {
+    document.getElementById('dobavljac_id').value    = id;
+    document.getElementById('dobavljac_naziv').value = naziv;
+    document.getElementById('dobavljac_txt').value   = naziv;
+    document.getElementById('dobavljac_results').innerHTML = '';
+}
+</script>
+
+{% if m %}
+<div class="mt-5 bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden">
+    <div class="bg-slate-700 px-4 py-2.5">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-white">Povijest cijena</h2>
+    </div>
+    <div class="p-4">
+        {% if m.cijene %}
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-left text-xs font-semibold text-gray-600 border-b-2 border-gray-300">
+                    <th class="pb-2">Datum vazenja</th>
+                    <th class="pb-2 text-right">Cijena</th>
+                    <th class="pb-2">Valuta</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in m.cijene|sort(attribute='datum_vazenja', reverse=True) %}
+                <tr class="border-b border-gray-200 even:bg-gray-50">
+                    <td class="py-1.5 text-gray-800">{{ c.datum_vazenja }}</td>
+                    <td class="py-1.5 text-right font-mono font-semibold text-gray-900">{{ c.cijena }}</td>
+                    <td class="py-1.5 text-gray-600">{{ c.valuta }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-gray-500 text-sm">Nema zapisa o cijenama.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-3 flex items-center justify-between pb-6">
+    <p class="text-xs text-gray-500">
+        Kreirano: {{ m.created_at.strftime('%d.%m.%Y %H:%M') if m.created_at else '—' }}
+        &nbsp;·&nbsp;
+        Azurirano: {{ m.updated_at.strftime('%d.%m.%Y %H:%M') if m.updated_at else '—' }}
+        {% if m.updated_by %}({{ m.updated_by }}){% endif %}
+    </p>
+    <form method="post" action="/materijali/{{ m.id }}/obrisi"
+          onsubmit="return confirm('Obrisati materijal {{ m.sifra }}?')">
+        <button type="submit"
+                class="text-xs text-red-600 font-semibold hover:text-red-800 hover:underline transition-colors">
+            Obrisi materijal
+        </button>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

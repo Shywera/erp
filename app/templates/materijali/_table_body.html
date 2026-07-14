@@ -1,0 +1,75 @@
+<div class="overflow-x-auto">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="bg-slate-800 text-white text-left text-xs uppercase tracking-wide">
+                <th class="px-3 py-3">Šifra</th>
+                <th class="px-3 py-3">Naziv</th>
+                <th class="px-3 py-3">Jed.</th>
+                <th class="px-3 py-3">Kategorija</th>
+                <th class="px-3 py-3">Tip</th>
+                <th class="px-3 py-3">Grupa</th>
+                <th class="px-3 py-3">Podgrupa</th>
+                <th class="px-3 py-3 text-right">Min. kol.</th>
+                <th class="px-3 py-3 text-center">Aktivno</th>
+                <th class="px-3 py-3"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in materijali %}
+                {% include "materijali/_row.html" %}
+            {% else %}
+            <tr>
+                <td colspan="10" class="px-3 py-10 text-center text-gray-400 text-sm">
+                    {% if q %}Nema rezultata za „<strong>{{ q }}</strong>".{% else %}Nema materijala.{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{# Paginacija #}
+{% if total_pages is defined and total_pages > 1 or total is defined %}
+<div class="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-t border-gray-200 text-xs text-gray-500">
+    <span>
+        {% if total == 0 %}
+            Nema rezultata
+        {% elif total_pages == 1 %}
+            {{ total }} materijala ukupno
+        {% else %}
+            {{ (page - 1) * per_page + 1 }}–{{ [page * per_page, total] | min }} od {{ total }} materijala
+            &nbsp;·&nbsp; stranica {{ page }} / {{ total_pages }}
+        {% endif %}
+    </span>
+
+    {% if total_pages > 1 %}
+    <div class="flex items-center gap-1">
+        {% if page > 1 %}
+        <button hx-get="/materijali/search?q={{ q | urlencode }}&page=1"
+                hx-target="#mat-result-wrapper" hx-swap="innerHTML"
+                class="px-2 py-1 rounded border border-gray-300 hover:bg-gray-200 font-mono transition-colors" title="Prva stranica">«</button>
+        <button hx-get="/materijali/search?q={{ q | urlencode }}&page={{ page - 1 }}"
+                hx-target="#mat-result-wrapper" hx-swap="innerHTML"
+                class="px-2.5 py-1 rounded border border-gray-300 hover:bg-gray-200 transition-colors">‹ Prethodna</button>
+        {% endif %}
+
+        {% for p in range([1, page - 2] | max, [total_pages + 1, page + 3] | min) %}
+        <button hx-get="/materijali/search?q={{ q | urlencode }}&page={{ p }}"
+                hx-target="#mat-result-wrapper" hx-swap="innerHTML"
+                class="px-2.5 py-1 rounded border transition-colors
+                       {% if p == page %}bg-blue-600 text-white border-blue-600 font-semibold
+                       {% else %}border-gray-300 hover:bg-gray-200{% endif %}">{{ p }}</button>
+        {% endfor %}
+
+        {% if page < total_pages %}
+        <button hx-get="/materijali/search?q={{ q | urlencode }}&page={{ page + 1 }}"
+                hx-target="#mat-result-wrapper" hx-swap="innerHTML"
+                class="px-2.5 py-1 rounded border border-gray-300 hover:bg-gray-200 transition-colors">Sljedeća ›</button>
+        <button hx-get="/materijali/search?q={{ q | urlencode }}&page={{ total_pages }}"
+                hx-target="#mat-result-wrapper" hx-swap="innerHTML"
+                class="px-2 py-1 rounded border border-gray-300 hover:bg-gray-200 font-mono transition-colors" title="Zadnja stranica">»</button>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}

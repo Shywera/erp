@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Kalkulator normativa{% endblock %}
+
+{% block content %}
+<div class="flex gap-5 items-start">
+
+    {# ── Lijevo: unos podataka ─────────────────────────────────────────── #}
+    <div class="w-72 flex-shrink-0">
+        <div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden sticky top-6 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            <div class="bg-slate-700 px-4 py-2.5">
+                <h2 class="text-xs font-bold uppercase tracking-widest text-white">Unos podataka</h2>
+            </div>
+
+            <form id="kalk-form"
+                  hx-post="/normativi/kalkulator/izracunaj"
+                  hx-trigger="change delay:400ms"
+                  hx-target="#rezultati"
+                  hx-swap="innerHTML"
+                  hx-indicator="#spinner"
+                  class="p-3 space-y-4 text-sm">
+
+                {% macro fi(name, label, value, typ='text', step='1', min='') %}
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-500 mb-0.5">{{ label }}</label>
+                    <input type="{{ typ }}" name="{{ name }}" value="{{ value }}"
+                           {% if step %}step="{{ step }}"{% endif %}
+                           {% if min %}min="{{ min }}"{% endif %}
+                           class="w-full border border-gray-400 bg-white rounded px-2 py-1 text-sm text-gray-900
+                                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                {% endmacro %}
+
+                {% macro sel(name, label, options, value) %}
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-500 mb-0.5">{{ label }}</label>
+                    <select name="{{ name }}"
+                            class="w-full border border-gray-400 bg-white rounded px-2 py-1 text-sm text-gray-900
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        {% for o in options %}
+                        <option value="{{ o }}" {% if o == value %}selected{% endif %}>{{ o }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endmacro %}
+
+                {{ fi('naziv', 'Naziv proizvoda', p.naziv) }}
+
+                <div class="border-t border-gray-100 pt-3">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Papir</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        {{ fi('gramatura', 'Gramatura (g/m²)', p.gramatura, 'number', '1', '30') }}
+                        {{ sel('tip_papira', 'Tip papira', ['metal', 'bijeli'], p.tip_papira) }}
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-3">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Format arka (mm)</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        {{ fi('arka_x', 'X (širina)', p.arka_x, 'number', '1') }}
+                        {{ fi('arka_y', 'Y (visina)', p.arka_y, 'number', '1') }}
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-3">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Format etikete (mm)</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        {{ fi('et_xn', 'X netto', p.et_xn, 'number', '0.5') }}
+                        {{ fi('et_yn', 'Y netto', p.et_yn, 'number', '0.5') }}
+                        {{ fi('et_xb', 'X brutto', p.et_xb, 'number', '0.5') }}
+                        {{ fi('et_yb', 'Y brutto', p.et_yb, 'number', '0.5') }}
+                    </div>
+                    {{ fi('grajfer', 'Strojni grajfer (mm)', p.grajfer, 'number', '1') }}
+                </div>
+
+                <div class="border-t border-gray-100 pt-3">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Dorada — rezanje</div>
+                    {{ fi('naklada_dorada', 'Naklada dorada (kom)', p.naklada_dorada, 'number', '1000') }}
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        {{ sel('odabir_rez', 'Odabir reza', ['X', 'Y'], p.odabir_rez) }}
+                        {{ fi('brutto_araka', 'Brutto araka', p.brutto_araka, 'number', '100') }}
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-3">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Pakiranje</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        {{ fi('et_u_kutiji', 'Et. u kutiji', p.et_u_kutiji, 'number', '100') }}
+                        {{ fi('kutija_na_paleti', 'Kutija/paleta', p.kutija_na_paleti, 'number', '1') }}
+                    </div>
+                    {{ fi('kutija_tip', 'Kutija tip', p.kutija_tip) }}
+                    {{ fi('paleta_tip', 'Paleta tip', p.paleta_tip) }}
+                </div>
+
+                <div class="border-t border-gray-100 pt-3">
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Tisak</div>
+                    {{ fi('naklada_tisak', 'Naklada tisak (kom)', p.naklada_tisak, 'number', '1000') }}
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        {{ fi('broj_boja', 'Broj boja', p.broj_boja, 'number', '1', '1') }}
+                        {{ fi('prolazi', 'Broj prolaza', p.prolazi, 'number', '1', '1') }}
+                    </div>
+                    {{ sel('lakirano', 'Lakirano', ['NE', 'DA'], p.lakirano) }}
+                </div>
+
+            </form>
+
+            {# ── Parametri strojeva (vremena/brzine koje koristi izračun) ──── #}
+            <div class="px-3 py-3 border-t border-gray-200 bg-gray-50">
+                <a href="/normativi/parametri"
+                   class="flex items-center justify-center gap-1.5 w-full px-3 py-2 text-sm font-semibold
+                          text-slate-700 bg-white border border-gray-300 rounded
+                          hover:bg-slate-100 hover:border-slate-400 transition-colors">
+                    ⚙ Parametri strojeva
+                </a>
+                <p class="text-[10px] text-gray-400 text-center mt-1.5 leading-snug">
+                    Vremena i brzine strojeva koje ovaj izračun koristi.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    {# ── Desno: rezultati ─────────────────────────────────────────────────── #}
+    <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between mb-4">
+            <h1 class="text-xl font-bold text-gray-800">
+                Kalkulator normativa
+                <span id="spinner" class="htmx-indicator ml-2 text-sm font-normal text-blue-500">↻ izračunavam...</span>
+            </h1>
+        </div>
+
+        <div id="rezultati">
+            {% include "normativi/_rezultati.html" %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

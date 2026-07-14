@@ -1,0 +1,83 @@
+{% macro ecell(s, polje, val, num=false, swap='innerHTML', w='') %}
+<td class="border border-gray-300 p-0 {{ w }}">
+    <input value="{% if val is not none %}{{ val }}{% endif %}" {% if num %}type="number"{% endif %}
+           name="vrijednost" hx-post="/planiranje/stavka/{{ s.id }}/uredi" hx-vals='{"polje": "{{ polje }}"}'
+           hx-trigger="change"
+           {% if swap == 'none' %}hx-swap="none"{% else %}hx-target="#tablica" hx-swap="innerHTML"{% endif %}
+           class="w-full bg-transparent border-0 px-1.5 py-0.5 text-[11px] {% if num %}text-right font-mono{% endif %}
+                  focus:bg-blue-100 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-blue-500">
+</td>
+{% endmacro %}
+
+<div class="text-xs text-gray-500 mb-2">
+    <strong class="text-gray-800">{{ presa.sifra }}</strong> · {{ opt.broj }} naloga ·
+    ukupno <strong class="text-gray-800">{{ opt.sati_min | fmtmin }}</strong> h ·
+    završetak <strong class="text-gray-800">{{ opt.kraj | fmtdt }}</strong>
+    <span class="text-gray-400">— klikni ćeliju za upis · ☰ povuci za redoslijed · ✓ gotovo (žuto).</span>
+</div>
+
+<div class="overflow-x-auto border border-gray-400 rounded">
+    <table class="border-collapse text-[11px] w-full bg-white">
+        <thead class="sticky top-0 z-10">
+            <tr class="bg-gray-100 text-gray-700">
+                {% for h in ['', '#', 'RN', 'ROK', 'NAZIV PROIZVODA', 'PAPIR', 'FORMAT', 'NAKLADA', 'KONT',
+                             'OTISAKA', 'NORM', 'PRIP', 'RAD', 'PRA', 'SATI', 'POČETAK', 'ZAVRŠETAK', ''] %}
+                <th class="border border-gray-300 px-1.5 py-1 {% if h in ['NAKLADA','KONT','OTISAKA','NORM','PRIP','RAD','PRA','SATI'] %}text-right{% else %}text-left{% endif %}">{{ h }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody id="sort-{{ slug }}">
+        {% for s in stavke %}
+        {% set done = s.status == 'gotovo' %}
+        <tr data-id="{{ s.id }}" class="{% if done %}bg-yellow-100{% else %}hover:bg-blue-50{% endif %}">
+            <td class="border border-gray-300 px-1 py-0.5 text-gray-300 cursor-move drag select-none text-center">☰</td>
+            <td class="border border-gray-300 px-1 py-0.5 text-gray-400 text-center">{{ s.redoslijed }}</td>
+            {{ ecell(s, 'rn', s.rn, swap='none', w='w-14') }}
+            {{ ecell(s, 'rok', s.rok, swap='none', w='w-16') }}
+            {{ ecell(s, 'naziv', s.naziv, swap='none') }}
+            {{ ecell(s, 'papir_naziv', s.papir_naziv, swap='none') }}
+            {{ ecell(s, 'format_cm', s.format_cm, swap='none', w='w-20') }}
+            {{ ecell(s, 'naklada', s.naklada, num=true) }}
+            {{ ecell(s, 'kontakata', s.kontakata, num=true, w='w-14') }}
+            <td class="border border-gray-300 px-1.5 py-0.5 text-right font-mono text-gray-600">{{ s.otisaka | fmtn }}</td>
+            {{ ecell(s, 'normativ', s.normativ, num=true, w='w-16') }}
+            {{ ecell(s, 'priprema_min', s.priprema_min, num=true, w='w-12') }}
+            <td class="border border-gray-300 px-1.5 py-0.5 text-right font-mono text-gray-600">{{ s.rad_min | fmtmin }}</td>
+            {{ ecell(s, 'pranje_min', s.pranje_min, num=true, w='w-12') }}
+            <td class="border border-gray-300 px-1.5 py-0.5 text-right font-mono font-bold text-gray-800">{{ s.sati_min | fmtmin }}</td>
+            <td class="border border-gray-300 px-1.5 py-0.5 text-gray-500 whitespace-nowrap">{{ s.pocetak | fmtdt }}</td>
+            <td class="border border-gray-300 px-1.5 py-0.5 text-gray-700 whitespace-nowrap">{{ s.zavrsetak | fmtdt }}</td>
+            <td class="border border-gray-300 px-0.5 py-0.5 text-center whitespace-nowrap">
+                <button hx-post="/planiranje/stavka/{{ s.id }}/status" hx-target="#tablica" hx-swap="innerHTML"
+                        title="{% if done %}vrati u plan{% else %}označi gotovo{% endif %}"
+                        class="w-4 h-4 leading-none rounded-full border text-[9px]
+                               {% if done %}bg-yellow-400 border-yellow-500 text-white{% else %}border-gray-300 text-transparent hover:border-yellow-400 hover:text-yellow-400{% endif %}">✓</button>
+                <button hx-post="/planiranje/stavka/{{ s.id }}/obrisi" hx-target="#tablica" hx-swap="innerHTML"
+                        hx-confirm="Obrisati nalog {{ s.rn or s.id }}?"
+                        class="text-red-300 hover:text-red-600 ml-0.5">✕</button>
+            </td>
+        </tr>
+        {% endfor %}
+        {% if not stavke %}
+        <tr><td colspan="18" class="border border-gray-300 px-3 py-6 text-center text-gray-400">Nema naloga — uvezi Excel ili dodaj nalog ispod.</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+(function () {
+    var tb = document.getElementById('sort-{{ slug }}');
+    if (!tb || tb._sortable) return;
+    tb._sortable = new Sortable(tb, {
+        handle: '.drag', animation: 220, easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        ghostClass: 'sort-ghost', chosenClass: 'sort-chosen',
+        onEnd: function () {
+            var ids = Array.from(tb.children).map(function (tr) { return tr.dataset.id; })
+                           .filter(Boolean).join(',');
+            htmx.ajax('POST', '/planiranje/raspored/{{ slug }}/redoslijed',
+                      { target: '#tablica', swap: 'innerHTML', values: { ids: ids } });
+        }
+    });
+})();
+</script>

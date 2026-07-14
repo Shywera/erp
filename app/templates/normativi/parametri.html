@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Parametri strojeva{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl">
+
+    <a href="/normativi/kalkulator" class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-3">
+        ← Natrag na kalkulator
+    </a>
+
+    <div class="flex items-center justify-between mb-5">
+        <div>
+            <h1 class="text-xl font-bold text-gray-800">Parametri strojeva</h1>
+            <p class="text-xs text-gray-500 mt-0.5">Vremena i brzine strojeva koje koristi <strong>Kalkulator normativa</strong> za izračun.</p>
+        </div>
+        <form method="post" action="/normativi/parametri/reset-sve"
+              onsubmit="return confirm('Resetirati SVE parametre na zadane vrijednosti?')">
+            <button type="submit"
+                    class="px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 border border-red-300 rounded hover:bg-red-100 transition-colors">
+                ↩ Reset svih parametara
+            </button>
+        </form>
+    </div>
+
+    {% for group_name, machines in groups %}
+    <div class="bg-white rounded-lg border border-gray-300 shadow-md overflow-hidden mb-6">
+        <div class="bg-slate-700 px-4 py-2.5">
+            <h2 class="text-xs font-bold uppercase tracking-widest text-white">{{ group_name }}</h2>
+        </div>
+        <div class="p-4">
+
+        {% for key, machine_name in machines %}
+        <details class="mb-3 border border-gray-300 rounded-lg overflow-hidden">
+            <summary class="cursor-pointer px-4 py-3 bg-slate-100 hover:bg-slate-200 select-none font-semibold text-sm text-slate-700 flex items-center gap-2">
+                <span class="text-gray-400 text-xs">▶</span>
+                {{ machine_name }}
+                {% if params[key] != default_params[key] %}
+                <span class="ml-2 text-[10px] font-bold uppercase tracking-wide text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">Izmijenjeno</span>
+                {% endif %}
+            </summary>
+            <div class="p-4">
+
+                <form method="post" action="/normativi/parametri/{{ key }}/spremi">
+                    <div class="grid grid-cols-3 gap-3 mb-4">
+                    {% for k, v in params[key].items() %}
+                        {% set lbl = labels.get(k, k) %}
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-500 mb-0.5">{{ lbl }}</label>
+                            {% if v is string %}
+                            <select name="{{ k }}"
+                                    class="w-full border border-gray-400 bg-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="DA" {% if v == 'DA' %}selected{% endif %}>DA</option>
+                                <option value="NE" {% if v == 'NE' %}selected{% endif %}>NE</option>
+                            </select>
+                            {% elif v is float %}
+                            <input type="number" name="{{ k }}" value="{{ v }}" step="0.0001"
+                                   class="w-full border border-gray-400 bg-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            {% else %}
+                            <input type="number" name="{{ k }}" value="{{ v }}" step="1" min="0"
+                                   class="w-full border border-gray-400 bg-white rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    </div>
+                    <div class="border-t border-gray-100 pt-3">
+                        <button type="submit"
+                                class="px-4 py-1.5 text-sm font-semibold text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors">
+                            💾 Spremi
+                        </button>
+                    </div>
+                </form>
+
+                <form method="post" action="/normativi/parametri/{{ key }}/reset"
+                      class="mt-2"
+                      onsubmit="return confirm('Resetirati {{ machine_name }} na zadane vrijednosti?')">
+                    <button type="submit"
+                            class="px-4 py-1.5 text-sm font-semibold text-gray-600 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 transition-colors">
+                        ↩ Reset stroja
+                    </button>
+                </form>
+
+            </div>
+        </details>
+        {% endfor %}
+
+        </div>
+    </div>
+    {% endfor %}
+
+</div>
+{% endblock %}

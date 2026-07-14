@@ -1,0 +1,105 @@
+<div id="papiri-lista" class="space-y-3">
+
+    {% for tip in tipovi %}
+    {% set tip_papiri = grupe[tip] %}
+    {% if tip_papiri %}
+    <details class="border border-gray-200 rounded-lg overflow-hidden">
+        <summary class="cursor-pointer px-4 py-2 bg-slate-50 hover:bg-slate-100 select-none text-sm font-semibold text-slate-700 flex items-center gap-2">
+            <span class="text-gray-400 text-xs">▶</span>
+            {{ tip }} <span class="text-gray-400 font-normal">({{ tip_papiri | length }})</span>
+        </summary>
+        <div class="divide-y divide-gray-100">
+            {% for idx, pp in tip_papiri %}
+            <div class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 group" id="papir-row-{{ idx }}">
+                <span class="flex-1 text-sm text-gray-700">{{ pp.naziv }}</span>
+                <button type="button"
+                        onclick="document.getElementById('papir-edit-{{ idx }}').classList.toggle('hidden'); this.closest('[id^=papir-row]').classList.toggle('hidden')"
+                        class="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 text-slate-500 hover:text-blue-600 border border-gray-300 rounded transition-all">
+                    ✏
+                </button>
+                <button type="button"
+                        hx-post="/normativi/montaza/papiri/{{ idx }}/obrisi"
+                        hx-target="#papiri-lista"
+                        hx-swap="outerHTML"
+                        hx-confirm="Obrisati {{ pp.naziv }}?"
+                        class="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 text-slate-500 hover:text-red-600 border border-gray-300 rounded transition-all">
+                    🗑
+                </button>
+            </div>
+            <div id="papir-edit-{{ idx }}" class="hidden px-4 py-2 bg-blue-50 border-t border-blue-100">
+                <form hx-post="/normativi/montaza/papiri/{{ idx }}/uredi"
+                      hx-target="#papiri-lista"
+                      hx-swap="outerHTML"
+                      class="flex items-end gap-2">
+                    <div>
+                        <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">Tip</label>
+                        <select name="tip" class="border border-gray-400 bg-white rounded px-2 py-1 text-xs">
+                            {% for t in tipovi %}
+                            <option value="{{ t }}" {% if t == pp.tip %}selected{% endif %}>{{ t }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">Visina</label>
+                        <input type="number" name="v" value="{{ pp.v }}" min="1"
+                               class="w-20 border border-gray-400 bg-white rounded px-2 py-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">Širina</label>
+                        <input type="number" name="s" value="{{ pp.s }}" min="1"
+                               class="w-20 border border-gray-400 bg-white rounded px-2 py-1 text-xs">
+                    </div>
+                    <button type="submit"
+                            class="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded hover:bg-blue-700">
+                        Spremi
+                    </button>
+                    <button type="button"
+                            onclick="document.getElementById('papir-edit-{{ idx }}').classList.add('hidden'); document.getElementById('papir-row-{{ idx }}').classList.remove('hidden')"
+                            class="px-3 py-1 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-100">
+                        Odustani
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </details>
+    {% endif %}
+    {% endfor %}
+
+    {# Dodaj novi papir #}
+    <details class="border border-dashed border-gray-300 rounded-lg overflow-hidden">
+        <summary class="cursor-pointer px-4 py-2 bg-gray-50 hover:bg-gray-100 select-none text-sm font-semibold text-gray-500 flex items-center gap-2">
+            <span class="text-gray-400">+</span> Dodaj novi papir
+        </summary>
+        <div class="p-4">
+            <form hx-post="/normativi/montaza/papiri/dodaj"
+                  hx-target="#papiri-lista"
+                  hx-swap="outerHTML"
+                  class="flex items-end gap-2">
+                <div>
+                    <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">Tip</label>
+                    <select name="novi_tip" class="border border-gray-400 bg-white rounded px-2 py-1 text-xs">
+                        {% for t in tipovi %}
+                        <option value="{{ t }}">{{ t }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">Visina (mm)</label>
+                    <input type="number" name="novi_v" value="0" min="0"
+                           class="w-20 border border-gray-400 bg-white rounded px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold text-gray-500 mb-0.5">Širina (mm)</label>
+                    <input type="number" name="novi_s" value="0" min="0"
+                           class="w-20 border border-gray-400 bg-white rounded px-2 py-1 text-xs">
+                </div>
+                <button type="submit"
+                        class="px-3 py-1 text-xs font-semibold text-white bg-green-600 rounded hover:bg-green-700">
+                    Dodaj
+                </button>
+            </form>
+        </div>
+    </details>
+
+</div>
